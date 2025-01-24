@@ -11,3 +11,10 @@ Along the way, you'll meet new friends, discover hidden treasures, and unlock yo
 Ready to get started?
 
 **Let's go Copilot!** 🚀
+
+# Run the game
+
+| Command | Description |
+|---------|-------------|
+| `npm install` | Install project dependencies |
+| `npm run dev` | Launch a development web server |
