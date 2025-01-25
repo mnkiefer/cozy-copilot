@@ -12,7 +12,7 @@ Ready to get started?
 
 **Let's go Copilot!** 🚀
 
-# Run the game
+## Run the game
 
 | Command | Description |
 |---------|-------------|
