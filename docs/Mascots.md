@@ -1,8 +1,8 @@
-# Mascots
+# Companions
 
-Mascots are your loyal companions on this coding adventure. They’re here to help you, guide you, and cheer you on as you explore the Land of Code and tackle challenges along the way.
+Joining you on this coding adventure are your local companions. They're here to help you, guide you, and cheer you on as you explore the Land of Code and tackle challenges along the way.
 
-Each Mascot has its own personality and skills:
+Each companion has its own personality and skills:
 
 * **The Octocat**: Clever, curious, and great at staying organized, Mona keeps the team on track. Mona can summon Git Powers to track and revert errors, etc.
 
