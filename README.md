@@ -1,6 +1,6 @@
 # Cozy Copilot
 
-## Welcome to the Land of Code! 👋
+## Welcome to the Land of Code!
 
 <img width="35%" src="./docs/screenshot.png" align="right" />
 
