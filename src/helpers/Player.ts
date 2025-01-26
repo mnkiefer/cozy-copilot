@@ -21,7 +21,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         scene.anims.create({
             key: 'walk_up',
             frames: scene.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
-            frameRate: 10,
+            frameRate: 5,
             repeat: -1
         });
         scene.anims.create({
@@ -33,7 +33,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         scene.anims.create({
             key: 'walk_right',
             frames: scene.anims.generateFrameNumbers('player', { start: 12, end: 15 }),
-            frameRate: 10,
+            frameRate: 5,
             repeat: -1
         });
     }

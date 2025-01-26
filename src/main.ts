@@ -7,14 +7,25 @@ import { Game, Types } from 'phaser';
 
 const config: Types.Core.GameConfig = {
     type: Phaser.AUTO,
-    width: 800, // Set the desired width
-    height: 600, // Set the desired height
-    parent: 'game-container',
-    backgroundColor: '#028af8',
+    width: 768,
+    height: 1024,
+    backgroundColor: "#2d7c45",
+    min: {
+        width: 480,
+        height: 720,
+    },
+    max: {
+        width: 1024,
+        height: 1280,
+    },
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
     },
+    dom: {
+        createContainer: true
+    },
+    parent: 'game-container',
     physics: {
         default: 'arcade',
         arcade: {

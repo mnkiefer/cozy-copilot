@@ -18,3 +18,7 @@ Ready to get started?
 |---------|-------------|
 | `npm install` | Install project dependencies |
 | `npm run dev` | Launch a development web server |
+
+# References
+
+- Graphics based on this link [this vector RPG demo](https://rhosgfx.itch.io/vector-rpg-overworld-demo)
