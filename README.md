@@ -1,8 +1,8 @@
 # Cozy Copilot
 
-<img width="40%" src="./docs/screenshot.png" align="right" />
-
 ## Welcome to the Land of Code! 👋
+
+<img width="40%" src="./docs/screenshot.png" align="left" />
 
 The Land of Code is a bright, exciting place full of creativity and possibilities. It's where people build amazing things - games, apps, and programs that connect the world around us. This magical land is home to the Codelets, hardworking and cheerful little creatures who keep everything running smoothly. Codelets are responsible for maintaining the systems, organizing data, and ensuring that all the programs in the Land of Code work perfectly.
 
