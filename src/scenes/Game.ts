@@ -93,7 +93,7 @@ export class Game extends Scene
         const screenWidth = this.cameras.main.width;
         const screenHeight = this.cameras.main.height;
         const buttonSize = Math.min(screenWidth, screenHeight) * 0.15; // 15% of screen size
-        const padding = buttonSize * 0.3; // 30% of button size
+        const padding = buttonSize; // 100% of button size
         const alpha = 0.4;
 
         // Position controls in bottom left corner
