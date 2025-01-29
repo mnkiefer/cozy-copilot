@@ -89,40 +89,63 @@ export class Game extends Scene
     }
 
     private createMobileControls(): void {
-        const buttonSize = 64;
-        const padding = 20;
-        const alpha = 0.5;
+        // Calculate dimensions based on screen size
+        const screenWidth = this.cameras.main.width;
+        const screenHeight = this.cameras.main.height;
+        const buttonSize = Math.min(screenWidth, screenHeight) * 0.15; // 15% of screen size
+        const padding = buttonSize * 0.3; // 30% of button size
+        const alpha = 0.4;
 
-        // Create directional buttons
-        const upButton = this.add.circle(padding + buttonSize * 1.5, this.cameras.main.height - padding - buttonSize * 2, buttonSize/2, 0x666666, alpha)
+        // Position controls in bottom left corner
+        const baseX = padding + buttonSize;
+        const baseY = screenHeight - padding - buttonSize;
+
+        // Create directional buttons with relative positioning
+        const upButton = this.add.circle(baseX, baseY - buttonSize, buttonSize/2, 0x666666, alpha)
             .setScrollFactor(0)
-            .setInteractive();
-        const downButton = this.add.circle(padding + buttonSize * 1.5, this.cameras.main.height - padding, buttonSize/2, 0x666666, alpha)
+            .setInteractive()
+            .setDepth(1000); // Ensure buttons are always on top
+
+        const downButton = this.add.circle(baseX, baseY + buttonSize, buttonSize/2, 0x666666, alpha)
             .setScrollFactor(0)
-            .setInteractive();
-        const leftButton = this.add.circle(padding + buttonSize * 0.5, this.cameras.main.height - padding - buttonSize, buttonSize/2, 0x666666, alpha)
+            .setInteractive()
+            .setDepth(1000);
+
+        const leftButton = this.add.circle(baseX - buttonSize, baseY, buttonSize/2, 0x666666, alpha)
             .setScrollFactor(0)
-            .setInteractive();
-        const rightButton = this.add.circle(padding + buttonSize * 2.5, this.cameras.main.height - padding - buttonSize, buttonSize/2, 0x666666, alpha)
+            .setInteractive()
+            .setDepth(1000);
+
+        const rightButton = this.add.circle(baseX + buttonSize, baseY, buttonSize/2, 0x666666, alpha)
             .setScrollFactor(0)
-            .setInteractive();
+            .setInteractive()
+            .setDepth(1000);
 
-        // Add touch handlers
-        leftButton.on('pointerdown', () => this.moveLeft = true);
-        leftButton.on('pointerup', () => this.moveLeft = false);
-        leftButton.on('pointerout', () => this.moveLeft = false);
+        // Add larger hit areas for better touch response
+        const hitArea = new Phaser.Geom.Circle(0, 0, buttonSize/1.5);
+        [upButton, downButton, leftButton, rightButton].forEach(button => {
+            button.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
+        });
 
-        rightButton.on('pointerdown', () => this.moveRight = true);
-        rightButton.on('pointerup', () => this.moveRight = false);
-        rightButton.on('pointerout', () => this.moveRight = false);
+        // Add touch handlers with improved touch response
+        const addTouchHandlers = (button: Phaser.GameObjects.Shape, moveProperty: string) => {
+            button.on('pointerdown', () => this[moveProperty] = true);
+            button.on('pointerup', () => this[moveProperty] = false);
+            button.on('pointerout', () => this[moveProperty] = false);
+            // Add touch cancel handler for better mobile experience
+            button.on('pointercancel', () => this[moveProperty] = false);
+        };
 
-        upButton.on('pointerdown', () => this.moveUp = true);
-        upButton.on('pointerup', () => this.moveUp = false);
-        upButton.on('pointerout', () => this.moveUp = false);
+        addTouchHandlers(leftButton, 'moveLeft');
+        addTouchHandlers(rightButton, 'moveRight');
+        addTouchHandlers(upButton, 'moveUp');
+        addTouchHandlers(downButton, 'moveDown');
 
-        downButton.on('pointerdown', () => this.moveDown = true);
-        downButton.on('pointerup', () => this.moveDown = false);
-        downButton.on('pointerout', () => this.moveDown = false);
+        // Make controls only visible on touch devices
+        const isTouchDevice = this.sys.game.device.input.touch;
+        [upButton, downButton, leftButton, rightButton].forEach(button => {
+            button.setVisible(isTouchDevice);
+        });
     }
 
     private handleMovement(): void {
