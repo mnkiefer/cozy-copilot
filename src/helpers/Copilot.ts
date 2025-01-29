@@ -40,42 +40,76 @@ export class Copilot extends Phaser.Physics.Arcade.Sprite {
     }
 }
 
-export function handleCopilotMovement(player: Player, copilot: Copilot): void {
-    const stoppingDistance = 50;
-    let targetX = player.x;
-    let targetY = player.y;
-    if (player.direction === 'left') {
-        targetX += stoppingDistance;
-    } else if (player.direction === 'right') {
-        targetX -= stoppingDistance;
-    } else if (player.direction === 'up') {
-        targetY += stoppingDistance;
-    } else if (player.direction === 'down') {
-        targetY -= stoppingDistance;
-    }
+interface CopilotConfig {
+    stoppingDistance: number;
+    springForce: number;
+    damping: number;
+    minMovementSpeed: number;
+}
 
-    const distance = Phaser.Math.Distance.Between(copilot.x, copilot.y, targetX, targetY);
-    const springForce = 0.5;
-    const damping = 0.9;
+const DEFAULT_CONFIG: CopilotConfig = {
+    stoppingDistance: 50,
+    springForce: 0.5,
+    damping: 0.9,
+    minMovementSpeed: 10
+};
+
+export function handleCopilotMovement(
+    player: Player,
+    copilot: Copilot,
+    config: Partial<CopilotConfig> = {}
+): void {
+    const { stoppingDistance, springForce, damping, minMovementSpeed } = { ...DEFAULT_CONFIG, ...config };
+
+    const targetPosition = calculateTargetPosition(player, stoppingDistance);
+    const distance = Phaser.Math.Distance.Between(copilot.x, copilot.y, targetPosition.x, targetPosition.y);
 
     if (distance > stoppingDistance) {
-        const angle = Phaser.Math.Angle.Between(copilot.x, copilot.y, targetX, targetY);
-        const forceX = Math.cos(angle) * (distance - stoppingDistance) * springForce;
-        const forceY = Math.sin(angle) * (distance - stoppingDistance) * springForce;
-
-        if (copilot.body) {
-            copilot.setVelocity(
-                copilot.body.velocity.x * damping + forceX,
-                copilot.body.velocity.y * damping + forceY
-            );
-        }
+        applyMovementForces(copilot, targetPosition, distance, stoppingDistance, springForce, damping);
     } else {
         copilot.setVelocity(0);
     }
 
+    updateAnimation(copilot, minMovementSpeed);
+}
+
+function calculateTargetPosition(player: Player, offset: number): { x: number; y: number } {
+    const position = { x: player.x, y: player.y };
+
+    switch (player.direction) {
+        case 'left': position.x += offset; break;
+        case 'right': position.x -= offset; break;
+        case 'up': position.y += offset; break;
+        case 'down': position.y -= offset; break;
+    }
+
+    return position;
+}
+
+function applyMovementForces(
+    copilot: Copilot,
+    target: { x: number; y: number },
+    distance: number,
+    stoppingDistance: number,
+    springForce: number,
+    damping: number
+): void {
+    const angle = Phaser.Math.Angle.Between(copilot.x, copilot.y, target.x, target.y);
+    const forceX = Math.cos(angle) * (distance - stoppingDistance) * springForce;
+    const forceY = Math.sin(angle) * (distance - stoppingDistance) * springForce;
+
+    if (copilot.body) {
+        copilot.setVelocity(
+            copilot.body.velocity.x * damping + forceX,
+            copilot.body.velocity.y * damping + forceY
+        );
+    }
+}
+
+function updateAnimation(copilot: Copilot, minSpeed: number): void {
     if (copilot.body) {
         const copilotVelocity = new Phaser.Math.Vector2(copilot.body.velocity.x, copilot.body.velocity.y);
-        if (copilotVelocity.length() > 10) {
+        if (copilotVelocity.length() > minSpeed) {
             if (Math.abs(copilotVelocity.x) > Math.abs(copilotVelocity.y)) {
                 if (copilotVelocity.x > 0) {
                     copilot.anims.play('copilot_walk_right', true);
