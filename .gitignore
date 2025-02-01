@@ -1,10 +1,8 @@
-# dependencies
+/dist
 /node_modules
 
-# vite
-/dist
-.env.local
+package-lock.json
 
-# misc
-*.swp
 .DS_Store
+.env.local
+*.swp
