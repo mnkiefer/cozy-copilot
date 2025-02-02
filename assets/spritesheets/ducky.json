@@ -1,0 +1,38 @@
+{
+  "frames": {
+    "ducky_0": { "frame": { "x": 0, "y": 0, "w": 64, "h": 80 } },
+    "ducky_1": { "frame": { "x": 64, "y": 0, "w": 64, "h": 80 } },
+    "ducky_2": { "frame": { "x": 128, "y": 0, "w": 64, "h": 80 } },
+    "ducky_3": { "frame": { "x": 192, "y": 0, "w": 64, "h": 80 } },
+    "ducky_4": { "frame": { "x": 0, "y": 80, "w": 64, "h": 80 } },
+    "ducky_5": { "frame": { "x": 64, "y": 80, "w": 64, "h": 80 } },
+    "ducky_6": { "frame": { "x": 128, "y": 80, "w": 64, "h": 80 } },
+    "ducky_7": { "frame": { "x": 192, "y": 80, "w": 64, "h": 80 } },
+    "ducky_8": { "frame": { "x": 0, "y": 160, "w": 64, "h": 80 } },
+    "ducky_9": { "frame": { "x": 64, "y": 160, "w": 64, "h": 80 } },
+    "ducky_10": { "frame": { "x": 128, "y": 160, "w": 64, "h": 80 } },
+    "ducky_11": { "frame": { "x": 192, "y": 160, "w": 64, "h": 80 } },
+    "ducky_12": { "frame": { "x": 0, "y": 240, "w": 64, "h": 80 } },
+    "ducky_13": { "frame": { "x": 64, "y": 240, "w": 64, "h": 80 } },
+    "ducky_14": { "frame": { "x": 128, "y": 240, "w": 64, "h": 80 } },
+    "ducky_15": { "frame": { "x": 192, "y": 240, "w": 64, "h": 80 } }
+  },
+  "meta": {
+    "app": "https://www.aseprite.org/",
+    "version": "1.3.9.2-arm64",
+    "image": "ducky.png",
+    "format": "RGBA8888",
+    "size": { "w": 256, "h": 320 },
+    "scale": "1",
+    "frameTags": [
+      { "name": "walk-down", "from": 0, "to": 3, "direction": "forward" },
+      { "name": "walk-up", "from": 4, "to": 7, "direction": "forward" },
+      { "name": "walk-left", "from": 8, "to": 11, "direction": "forward" },
+      { "name": "walk-right", "from": 12, "to": 15, "direction": "forward" }
+    ],
+    "layers": [
+      { "name": "Layer", "opacity": 255, "blendMode": "normal" }
+    ],
+    "slices": []
+  }
+}
