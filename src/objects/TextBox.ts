@@ -1,4 +1,5 @@
-import { Scene } from 'phaser';
+import type Phaser from 'phaser';
+import type { Scene } from 'phaser';
 
 export default class TextBox {
     private scene: Scene;

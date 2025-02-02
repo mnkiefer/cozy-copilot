@@ -2,6 +2,8 @@ import { Scene } from 'phaser';
 import Player from '../objects/Player';
 import TextBox from '../objects/TextBox';
 
+import type Phaser from 'phaser';
+
 export class Main extends Scene {
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private player!: Player;
@@ -46,8 +48,10 @@ export class Main extends Scene {
     }
 
     private initKeyboard() {
-        this.cursors = this.input.keyboard?.createCursorKeys()!;
-        this.events.on('update', this.update, this);
+        if (this.input.keyboard) {
+            this.cursors = this.input.keyboard.createCursorKeys();
+        }
+        this.events.on('update', () => this.update());
     }
 
     update() {
