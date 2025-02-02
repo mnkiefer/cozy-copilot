@@ -1,7 +1,9 @@
 import { Boot } from './Boot';
-import { Main } from './Main';
+import { Game } from './Game';
+import { MainMenu } from './MainMenu';
 
 export default [
     Boot,
-    Main
+    Game,
+    MainMenu
 ];

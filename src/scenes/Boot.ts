@@ -10,12 +10,14 @@ export class Boot extends Scene {
         this.load.setPath('assets');
 
         this.load.image("tiles", "tilesets/code-land.png");
-        this.load.atlas('player', 'spritesheets/player.png', 'spritesheets/player.json');
         this.load.tilemapTiledJSON("map", "tilemaps/player-home.json");
+
+        this.load.atlas('player', 'spritesheets/player.png', 'spritesheets/player.json');
+
         this.load.audio('music-opening', 'audio/opening.wav');
     }
 
     create() {
-        this.scene.start('Main');
+        this.scene.start('MainMenu');
     }
 }

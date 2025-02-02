@@ -16,6 +16,13 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#app canvas {
+    margin: 0 !important;
+    display: block;
 }
 
 /* Touch controls */
