@@ -6,9 +6,17 @@ import type { Types } from 'phaser';
 const config: Types.Core.GameConfig = {
     title: 'Cozy Copilot',
     version: '1.0.0',
-    width: 1024,
-    height: 768,
+    width: 768,
+    height: 1024,
     type: Phaser.AUTO,
+    min: {
+        width: 480,
+        height: 720,
+    },
+    max: {
+        width: 1024,
+        height: 1280,
+    },
     physics: {
         default: 'arcade',
         arcade: { debug: false }
@@ -17,16 +25,7 @@ const config: Types.Core.GameConfig = {
     scale: {
         parent: 'app',
         mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH,
-        min: {
-            width: 800,
-            height: 600
-        },
-        max: {
-            width: 1600,
-            height: 1200
-        },
-        zoom: 0.5
+        autoCenter: Phaser.Scale.CENTER_BOTH
     },
     scene: [...scenes]
 };

@@ -52,3 +52,57 @@ body {
 .touch-button:active {
     background-color: rgba(255, 255, 255, 0.8);
 }
+
+/* Movement buttons */
+.movement-buttons {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+}
+
+.movement-button {
+    width: 60px;
+    height: 60px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    color: #000;
+    cursor: pointer;
+}
+
+.movement-button:active {
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+#text-box-container {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    background-color: rgba(51, 51, 51, 0.9);
+    border: 2px solid #ffffff;
+    border-radius: 20px;
+    padding: 20px;
+    box-sizing: border-box;
+    display: none; /* Initially hidden */
+}
+
+#text-box {
+    font-size: 32px;
+    color: #ffffff;
+    word-wrap: break-word;
+    margin-bottom: 20px;
+}
+
+#text-box-button {
+    font-size: 28px;
+    color: #ffffff;
+    background-color:
