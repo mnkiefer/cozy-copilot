@@ -24,7 +24,7 @@ export class MainMenu extends Scene {
         this.background.displayHeight = this.sys.canvas.height;
 
         // Center the logo text
-        this.logo = this.add.text(this.sys.canvas.width / 2, this.sys.canvas.height / 3, 'Cozy Copilot', {
+        this.logo = this.add.text(this.sys.canvas.width / 2, this.sys.canvas.height / 3, 'DEMO', {
             fontFamily: 'Arial Black', fontSize: 50, color: '#ffffff', // Adjust font size if needed
             stroke: '#000000', strokeThickness: 8,
             align: 'center'

@@ -17,6 +17,7 @@ export class Game extends Scene {
 
     create() {
         this.initMap();
+        this.textBox = new TextBox(this);
         this.initPlayer();
         this.initKeyboard();
 
@@ -25,27 +26,27 @@ export class Game extends Scene {
             volume: 0.5
         });
 
-        this.textBox = new TextBox(this);
-        this.textBox.create(`🚨 SYSTEM ALERT! 🚨
-"Dear Debugger,
-The Land of Code is in danger! A glitch is causing the codelets to run amok. To help them recover, you must seek out the lost Debugging Companions and restore order before it is too late!"`);
+        this.textBox.create(`Be careful... there might be 🪲 Bugs 🐛 around here!"`);
         this.events.on('update', () => this.update());
     }
 
     private initMap() {
         const map = this.make.tilemap({ key: "map" });
         const tileset = map.addTilesetImage("code-land", "tiles")!;
+
         map.createLayer("Below Player", tileset, 0, 0);
+        map.createLayer("Below Player 2", tileset, 0, 0);
         this.worldLayer = map.createLayer("World", tileset, 0, 0)!;
         const aboveLayer = map.createLayer("Above Player", tileset, 0, 0);
         aboveLayer?.setDepth(10);
+
         this.worldLayer.setCollisionByProperty({ collides: true });
         this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
         this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     }
 
     private initPlayer() {
-        this.player = new Player(this, 865, 780);
+        this.player = new Player(this, 500, 50, this.textBox);
         this.physics.add.collider(this.player, this.worldLayer);
         this.cameras.main.startFollow(this.player, true, 0.09, 0.09);
     }

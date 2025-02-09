@@ -4,12 +4,14 @@ import type { Scene } from 'phaser';
 export default class TextBox {
     private scene: Scene;
     private textBox!: Phaser.GameObjects.Text;
+    public isActive: boolean = false;
 
     constructor(scene: Scene) {
         this.scene = scene;
     }
 
     create(message: string) {
+        this.isActive = true;
         const camera = this.scene.cameras.main;
 
         // Size and position of the text box
@@ -71,6 +73,7 @@ export default class TextBox {
                             innerFrame.destroy();
                             button?.destroy();
                             this.textBox.destroy();
+                            this.isActive = false;
                         }
                     });
                 button.setDepth(20);
