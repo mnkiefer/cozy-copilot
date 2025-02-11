@@ -34,19 +34,31 @@ export class Battle extends Scene {
             .setAlpha(0.8);
         const spriteSize = Math.min(this.cameras.main.width, this.cameras.main.height) * 0.5;
 
-        const enemySprite = this.add.image(
-            this.cameras.main.width * 0.75,
-            this.cameras.main.height * 0.3,
-            'syntax-spider'
-        );
+        // Enemy sprite: starting off-screen left then tween to final position
+        const enemyFinalX = this.cameras.main.width * 0.75;
+        const enemyFinalY = this.cameras.main.height * 0.3;
+        const enemySprite = this.add.image(enemyFinalX, enemyFinalY, 'syntax-spider');
         enemySprite.setScale(spriteSize / Math.max(enemySprite.width, enemySprite.height));
+        enemySprite.x = -enemySprite.width; // start off-screen left
+        this.tweens.add({
+            targets: enemySprite,
+            x: enemyFinalX,
+            duration: 1000,
+            ease: 'Power2'
+        });
 
-        const playerSprite = this.add.image(
-            this.cameras.main.width * 0.25,
-            this.cameras.main.height * 0.48,
-            'cartoon-player'
-        );
+        // Player sprite: starting off-screen right then tween to final position
+        const playerFinalX = this.cameras.main.width * 0.25;
+        const playerFinalY = this.cameras.main.height * 0.48;
+        const playerSprite = this.add.image(playerFinalX, playerFinalY, 'cartoon-player');
         playerSprite.setScale(spriteSize / Math.max(playerSprite.width, playerSprite.height));
+        playerSprite.x = this.cameras.main.width + playerSprite.width; // start off-screen right
+        this.tweens.add({
+            targets: playerSprite,
+            x: playerFinalX,
+            duration: 1000,
+            ease: 'Power2'
+        });
 
         this.textBox.create('A wild Bug appeared!\n\nWhat will you do?');
     }
