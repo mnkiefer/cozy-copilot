@@ -1,4 +1,4 @@
-# Cozy Copilot
+# Cozy Copilot Game
 
 🎮 [Try it out](https://mnkiefer.github.io/cozy-copilot/)
 
