@@ -60,7 +60,7 @@ export class Battle extends Scene {
             ease: 'Power2'
         });
 
-        this.textBox.create('A wild Bug appeared!\n\nWhat will you do?');
+        this.textBox.create('A wild Bug appeared...\nIt\'s a SYNTAX SPIDER!\n\nWhat will you do?');
     }
 
     private exitBattle() {

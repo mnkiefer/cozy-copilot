@@ -39,13 +39,13 @@ export default class TextBoxBattle {
         this.textBox = this.scene.add.text(textBoxX + 30, textBoxY + 30, '', {
             fontSize: '32px',
             color: '#ffffff',
-            wordWrap: { width: textBoxWidth - 60 },
+            wordWrap: { width: textBoxWidth },
             padding: { left: 20, right: 20, top: 20, bottom: 20 }
         });
         this.textBox.setDepth(textBoxDepth);
 
         const actionBoxX = textBoxX + textBoxWidth + 20;
-        const actionBoxWidth = textBoxWidth * 0.4;
+        const actionBoxWidth = textBoxWidth * 0.7;
         const actionBoxHeight = textBoxHeight;
 
         const actionBoxBackground = this.scene.add.graphics();
@@ -60,24 +60,31 @@ export default class TextBoxBattle {
         actionFrame.strokeRoundedRect(actionBoxX + 10, textBoxY + 10, actionBoxWidth - 20, actionBoxHeight - 20, 15);
         actionFrame.setDepth(textBoxDepth);
 
-        const actions = ['Fight', 'Friends', 'Tools', 'Run'];
-        const actionColors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00'];
+        const actions = ['DEBUG', 'FRIENDS', 'DEVTOOLS', 'ITEMS', 'RUN'];
+        const actionColors = ['#ff0000', '#00ff00', 'cyan', 'pink', '#ffff00'];
+        this.actionTexts = [];
         actions.forEach((action, index) => {
-            const actionText = this.scene.add.text(actionBoxX + 30, textBoxY + 30 + index * 40, action, {
-                fontSize: '28px',
-                color: actionColors[index],
-                backgroundColor: '#000000',
-                padding: { left: 10, right: 10, top: 5, bottom: 5 }
-            }).setInteractive();
+            const actionText = this.scene.add.text(
+                actionBoxX + actionBoxWidth / 2,
+                textBoxY + 50 + index * 40,
+                action,
+                {
+                    fontSize: '35px',
+                    color: actionColors[index],
+                    padding: { left: 10, right: 10, top: 10, bottom: 10 }
+                }
+            ).setOrigin(0.5)
+             .setInteractive();
             actionText.setDepth(textBoxDepth);
             this.actionTexts.push(actionText);
         });
 
-        this.arrow = this.scene.add.text(actionBoxX + 10, textBoxY + 30, '→', {
+        this.arrow = this.scene.add.text(0, 0, '→', {
             fontSize: '28px',
             color: '#ffffff'
-        });
-        this.arrow.setDepth(textBoxDepth);
+        }).setOrigin(0.5)
+          .setDepth(textBoxDepth);
+        this.updateArrowPosition();
 
         if (this.scene.input.keyboard) {
             this.scene.input.keyboard.on('keydown-UP', () => this.moveSelectionUp());
@@ -100,7 +107,7 @@ export default class TextBoxBattle {
 
     private selectAction() {
         const selectedAction = this.actionTexts[this.selectedIndex].text;
-        if (selectedAction === 'Run') {
+        if (selectedAction === 'RUN') {
             this.updateText('Got away safely!');
             this.scene.time.addEvent({
                 delay: 500,
@@ -116,6 +123,8 @@ export default class TextBoxBattle {
 
     private updateArrowPosition() {
         const selectedText = this.actionTexts[this.selectedIndex];
+        const offset = 30; // space between arrow and text
+        this.arrow.setX(selectedText.x - selectedText.width / 2 - offset);
         this.arrow.setY(selectedText.y);
     }
 
@@ -136,6 +145,6 @@ export default class TextBoxBattle {
 
     updateText(newText: string) {
         this.textBox.setText(newText);
-        this.textBox.setWordWrapWidth(this.textBox.width - 60);
+        this.textBox.setWordWrapWidth(this.textBox.width);
     }
 }
