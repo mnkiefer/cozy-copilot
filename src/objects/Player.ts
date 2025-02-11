@@ -4,7 +4,7 @@ import type TextBox from './TextBox';
 import type { Scene } from 'phaser';
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
-    private textBox: TextBox;
+    public isTransitioning: boolean = false;
 
     constructor(scene: Scene, x: number, y: number, textBox: TextBox) {
         super(scene, x, y, 'player');
@@ -35,12 +35,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     public update(cursors: Phaser.Types.Input.Keyboard.CursorKeys, speed: number) {
-        if (this.textBox.isActive) {
-            this.setVelocity(0);
-            this.anims.stop();
-            return;
-        }
-
         this.setVelocity(0);
         const direction = cursors.left?.isDown ? 'left' : cursors.right?.isDown
             ? 'right' : cursors.up?.isDown

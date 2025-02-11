@@ -1,9 +1,11 @@
 import { Boot } from './Boot';
-import { Game } from './Game';
 import { MainMenu } from './MainMenu';
+import { World } from './World';
+import { Battle } from './Battle';
 
 export default [
     Boot,
-    Game,
-    MainMenu
+    MainMenu,
+    World,
+    Battle
 ];
