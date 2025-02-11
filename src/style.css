@@ -35,8 +35,7 @@ body {
     gap: 10px;
 }
 
-.touch-button,
-.mute-button {
+.touch-button {
     width: 50px;
     height: 50px;
     background-color: rgba(255, 255, 255, 0.5);
@@ -51,22 +50,13 @@ body {
     transition: transform 0.2s;
 }
 
-.touch-button:active,
-.mute-button:active {
+.touch-button:active {
     background-color: rgba(255, 255, 255, 0.8);
     transform: scale(0.9);
 }
 
-.mute-button {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-}
-
 @media (max-width: 600px) {
-    .touch-button,
-    .mute-button {
+    .touch-button {
         width: 40px;
         height: 40px;
         font-size: 20px;
@@ -74,8 +64,7 @@ body {
 }
 
 @media (min-width: 1200px) {
-    .touch-button,
-    .mute-button {
+    .touch-button {
         width: 60px;
         height: 60px;
         font-size: 28px;

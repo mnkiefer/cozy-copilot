@@ -14,10 +14,10 @@ export default class TextBox {
     private static readonly DEFAULT_CONFIG: TextBoxConfig = {
         width: 0.8,
         height: 0.2,
-        fontSize: 35,
+        fontSize: 32,
         padding: 20,
         borderRadius: 20,
-        textSpeed: 70
+        textSpeed: 40
     };
 
     private scene: Scene;
@@ -29,11 +29,8 @@ export default class TextBox {
     private depth: number = 1000;
     private config: TextBoxConfig;
     private dimensions: { width: number; height: number; x: number; y: number; };
-    private isInCooldown: boolean = false;
-    private static readonly COOLDOWN_DURATION: number = 500; // milliseconds
     private messageQueue: Array<{text: string, callback?: () => void}> = [];
     private isProcessingQueue: boolean = false;
-    private textBoxCounter: number = 0; // Add a counter to track the number of text boxes displayed
 
     constructor(scene: Scene, config: Partial<TextBoxConfig> = {}) {
         this.scene = scene;
@@ -43,7 +40,6 @@ export default class TextBox {
 
     setDepth(depth: number) {
         this.depth = depth;
-        // Update depth of existing elements if they exist
         if (this.textBox) this.textBox.setDepth(depth);
         if (this.textBoxBackground) this.textBoxBackground.setDepth(depth);
         if (this.innerFrame) this.innerFrame.setDepth(depth);
@@ -55,7 +51,7 @@ export default class TextBox {
             this.messageQueue.push({text: message, callback: onComplete});
             return;
         }
-        
+
         this.isActive = true;
         this.createBackgrounds();
         this.createTextElement();
@@ -96,14 +92,12 @@ export default class TextBox {
         const { x, y, width, height } = this.dimensions;
         const { borderRadius, padding } = this.config;
 
-        // Main background
         this.textBoxBackground = this.createGraphics()
             .fillStyle(0x333333, 0.9)
             .fillRoundedRect(x, y, width, height, borderRadius)
             .lineStyle(2, 0xffffff, 1)
             .strokeRoundedRect(x, y, width, height, borderRadius);
 
-        // Inner frame
         this.innerFrame = this.createGraphics()
             .lineStyle(2, 0xffffff, 1)
             .strokeRoundedRect(x + padding!, y + padding!, width - padding! * 2, height - padding! * 2, borderRadius! - 5);
@@ -216,7 +210,6 @@ export default class TextBox {
     }
 
     private closeScene() {
-        this.scene.scene.stop(); // Stop the current scene
-        // Optionally, you can start another scene or perform other actions here
+        this.scene.scene.stop();
     }
 }

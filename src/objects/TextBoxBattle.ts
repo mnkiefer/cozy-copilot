@@ -5,10 +5,9 @@ export default class TextBoxBattle {
     private textBox!: Phaser.GameObjects.Text;
     private textBoxBackground!: Phaser.GameObjects.Graphics;
     private innerFrame!: Phaser.GameObjects.Graphics;
-    private buttonBoxBackground!: Phaser.GameObjects.Graphics;
-    private buttonBoxInnerFrame!: Phaser.GameObjects.Graphics;
-    private button?: Phaser.GameObjects.Text;
-    private actionButtons: Phaser.GameObjects.Container[] = [];
+    private actionTexts: Phaser.GameObjects.Text[] = [];
+    private selectedIndex: number = 0;
+    private arrow!: Phaser.GameObjects.Text;
     private exitCallback: () => void;
 
     constructor(scene: Scene, exitCallback: () => void) {
@@ -19,15 +18,12 @@ export default class TextBoxBattle {
     create(message: string) {
         const camera = this.scene.cameras.main;
 
-        const textBoxWidth = camera.width * 0.6;
-        const textBoxHeight = camera.height * 0.3; // Increased height slightly
-        const textBoxX = camera.scrollX + (camera.width - textBoxWidth * 2) / 3; // Adjusted position for side-by-side
-        const textBoxY = camera.scrollY + camera.height - textBoxHeight - (camera.height * 0.01); // Adjusted position
-
-        // Set depth to ensure the text box is in front of the player
+        const textBoxWidth = camera.width * 0.5;
+        const textBoxHeight = camera.height * 0.25;
+        const textBoxX = camera.scrollX + (camera.width - textBoxWidth * 1.8) / 2;
+        const textBoxY = camera.scrollY + camera.height - textBoxHeight - (camera.height * 0.05);
         const textBoxDepth = 30;
 
-        // Text box styles
         this.textBoxBackground = this.scene.add.graphics();
         this.textBoxBackground.fillStyle(0x333333, 0.9);
         this.textBoxBackground.fillRoundedRect(textBoxX, textBoxY, textBoxWidth, textBoxHeight, 20);
@@ -48,162 +44,98 @@ export default class TextBoxBattle {
         });
         this.textBox.setDepth(textBoxDepth);
 
-        // Create button box
-        const buttonBoxWidth = camera.width * 0.4;
-        const buttonBoxHeight = camera.height * 0.3; // Match height with text box
-        const buttonBoxX = textBoxX + textBoxWidth + (camera.width * 0.1); // Positioned next to text box
-        const buttonBoxY = textBoxY; // Same Y position as text box
+        const actionBoxX = textBoxX + textBoxWidth + 20;
+        const actionBoxWidth = textBoxWidth * 0.4;
+        const actionBoxHeight = textBoxHeight;
 
-        this.buttonBoxBackground = this.scene.add.graphics();
-        this.buttonBoxBackground.fillStyle(0x333333, 0.9);
-        this.buttonBoxBackground.fillRoundedRect(buttonBoxX, buttonBoxY, buttonBoxWidth, buttonBoxHeight, 20);
-        this.buttonBoxBackground.lineStyle(2, 0xffffff, 1);
-        this.buttonBoxBackground.strokeRoundedRect(buttonBoxX, buttonBoxY, buttonBoxWidth, buttonBoxHeight, 20);
-        this.buttonBoxBackground.setDepth(textBoxDepth);
+        const actionBoxBackground = this.scene.add.graphics();
+        actionBoxBackground.fillStyle(0x333333, 0.9);
+        actionBoxBackground.fillRoundedRect(actionBoxX, textBoxY, actionBoxWidth, actionBoxHeight, 20);
+        actionBoxBackground.lineStyle(2, 0xffffff, 1);
+        actionBoxBackground.strokeRoundedRect(actionBoxX, textBoxY, actionBoxWidth, actionBoxHeight, 20);
+        actionBoxBackground.setDepth(textBoxDepth);
 
-        this.buttonBoxInnerFrame = this.scene.add.graphics();
-        this.buttonBoxInnerFrame.lineStyle(2, 0xffffff, 1);
-        this.buttonBoxInnerFrame.strokeRoundedRect(buttonBoxX + 10, buttonBoxY + 10, buttonBoxWidth - 20, buttonBoxHeight - 20, 15);
-        this.buttonBoxInnerFrame.setDepth(textBoxDepth);
+        const actionFrame = this.scene.add.graphics();
+        actionFrame.lineStyle(2, 0xffffff, 1);
+        actionFrame.strokeRoundedRect(actionBoxX + 10, textBoxY + 10, actionBoxWidth - 20, actionBoxHeight - 20, 15);
+        actionFrame.setDepth(textBoxDepth);
 
-        // Add action buttons to the button box
-        this.addActionButton(buttonBoxX + 20, buttonBoxY + 20, 'Fight', 0xff0000);
-        this.addActionButton(buttonBoxX + 200, buttonBoxY + 20, 'Assistants', 0x00ff00);
-        this.addActionButton(buttonBoxX + 200, buttonBoxY + 80, 'Tools/Items', 0xffff00);
-        this.addActionButton(buttonBoxX + 20, buttonBoxY + 80, 'Run', 0x0000ff);
-
-        let index = 0;
-        let isWaitingForConsent = false;
-
-        const createButton = (text: string) => {
-            if (this.button) {
-                this.button.setText(text);
-                this.button.setVisible(true);
-            } else {
-                this.button = this.scene.add.text(textBoxX + textBoxWidth - 120, textBoxY + textBoxHeight - 100, text, {
-                    fontSize: '28px',
-                    color: '#ffffff',
-                    backgroundColor: '#555555',
-                    padding: { left: 20, right: 20, top: 10, bottom: 10 }
-                })
-                    .setInteractive({ useHandCursor: true }) // Ensure the button is interactive
-                    .on('pointerdown', () => {
-                        if (isWaitingForConsent) {
-                            isWaitingForConsent = false;
-                            this.textBox.setText('');
-                            this.button?.setVisible(false);
-                            this.scene.time.addEvent({
-                                delay: 50,
-                                callback: addText,
-                                repeat: message.length - index - 1
-                            });
-                        } else {
-                            this.closeTextBox();
-                        }
-                    });
-                this.button.setDepth(textBoxDepth);
-            }
-        };
-
-        const addText = () => {
-            if (index < message.length && !isWaitingForConsent) {
-                this.textBox.text += message[index];
-                index++;
-                if (this.textBox.height > textBoxHeight - 60) {
-                    isWaitingForConsent = true;
-                    createButton('↓');
-                }
-            }
-        };
-
-        this.scene.time.addEvent({
-            delay: 50,
-            callback: addText,
-            repeat: message.length - 1
+        const actions = ['Fight', 'Friends', 'Tools', 'Run'];
+        const actionColors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00'];
+        actions.forEach((action, index) => {
+            const actionText = this.scene.add.text(actionBoxX + 30, textBoxY + 30 + index * 40, action, {
+                fontSize: '28px',
+                color: actionColors[index],
+                backgroundColor: '#000000',
+                padding: { left: 10, right: 10, top: 5, bottom: 5 }
+            }).setInteractive();
+            actionText.setDepth(textBoxDepth);
+            this.actionTexts.push(actionText);
         });
+
+        this.arrow = this.scene.add.text(actionBoxX + 10, textBoxY + 30, '→', {
+            fontSize: '28px',
+            color: '#ffffff'
+        });
+        this.arrow.setDepth(textBoxDepth);
+
+        if (this.scene.input.keyboard) {
+            this.scene.input.keyboard.on('keydown-UP', () => this.moveSelectionUp());
+            this.scene.input.keyboard.on('keydown-DOWN', () => this.moveSelectionDown());
+            this.scene.input.keyboard.on('keydown-ENTER', () => this.selectAction());
+        }
+
+        this.updateText(message);
     }
 
-    addActionButton(x: number, y: number, text: string, color: number) {
-        const width = 160; // Reduced button size
-        const height = 45; // Reduced button size
+    private moveSelectionUp() {
+        this.selectedIndex = (this.selectedIndex - 1 + this.actionTexts.length) % this.actionTexts.length;
+        this.updateArrowPosition();
+    }
 
-        const button = this.scene.add.container(x, y);
+    private moveSelectionDown() {
+        this.selectedIndex = (this.selectedIndex + 1) % this.actionTexts.length;
+        this.updateArrowPosition();
+    }
 
-        // Draw button background once and store it
-        const buttonBackground = this.scene.add.graphics();
-        buttonBackground.fillStyle(color, 1);
-        buttonBackground.fillRoundedRect(-10, -10, width + 20, height + 20, 15);
-        buttonBackground.lineStyle(2, 0xffffff, 1);
-        buttonBackground.strokeRoundedRect(-10, -10, width + 20, height + 20, 15);
-        buttonBackground.setDepth(30);
-
-        const buttonText = this.scene.add.text(width / 2, height / 2, text, {
-            fontFamily: 'Courier New',
-            fontSize: '24px',
-            color: '#ffffff',
-            fontStyle: 'bold',
-            align: 'center',
-            stroke: '#000000',
-            strokeThickness: 4,
-        }).setOrigin(0.5);
-
-        button.add([buttonBackground, buttonText]);
-        button.setSize(width, height);
-        button.setDepth(30);
-
-        // Simplified interactivity with just alpha and scale changes
-        button.setInteractive({ useHandCursor: true })
-            .on('pointerover', () => {
-                button.setAlpha(0.8);
-                button.setScale(1.05);
-            })
-            .on('pointerout', () => {
-                button.setAlpha(1);
-                button.setScale(1.0);
-            })
-            .on('pointerdown', () => {
-                button.setScale(0.95);
-                if (text === 'Run') {
-                    this.updateText('Got away safely!');
-                    this.scene.time.addEvent({
-                        delay: 500,
-                        callback: () => {
-                            this.closeTextBox();
-                            this.exitCallback();
-                        }
-                    });
-                } else {
-                    this.updateText(`Used ${text}!\nIt's super effective!`);
+    private selectAction() {
+        const selectedAction = this.actionTexts[this.selectedIndex].text;
+        if (selectedAction === 'Run') {
+            this.updateText('Got away safely!');
+            this.scene.time.addEvent({
+                delay: 500,
+                callback: () => {
+                    this.closeTextBox();
+                    this.exitCallback();
                 }
-            })
-            .on('pointerup', () => {
-                button.setScale(1.05);
             });
+        } else {
+            this.updateText(`Used ${selectedAction}!\nIt's super effective!`);
+        }
+    }
+
+    private updateArrowPosition() {
+        const selectedText = this.actionTexts[this.selectedIndex];
+        this.arrow.setY(selectedText.y);
     }
 
     closeTextBox() {
         this.textBox.setVisible(false);
         this.textBoxBackground.setVisible(false);
         this.innerFrame.setVisible(false);
-        if (this.button) {
-            this.button.setVisible(false);
-        }
-        this.actionButtons.forEach(button => button.setVisible(false));
-        this.buttonBoxBackground.setVisible(false);
-        this.buttonBoxInnerFrame.setVisible(false);
+        this.arrow.setVisible(false);
+        this.actionTexts.forEach(text => text.setVisible(false));
 
-        // Reset text box settings
         this.textBox.setText('');
         this.textBox.setDepth(0);
         this.textBoxBackground.clear();
         this.textBoxBackground.setDepth(20);
         this.innerFrame.clear();
-        this.buttonBoxBackground.clear();
-        this.buttonBoxInnerFrame.clear();
-        this.actionButtons = [];
+        this.actionTexts = [];
     }
 
     updateText(newText: string) {
         this.textBox.setText(newText);
+        this.textBox.setWordWrapWidth(this.textBox.width - 60);
     }
 }

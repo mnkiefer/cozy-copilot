@@ -1,14 +1,13 @@
 import Phaser from 'phaser';
-import type TextBox from './TextBox';
 
 import type { Scene } from 'phaser';
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
     public isTransitioning: boolean = false;
+    public isInBattle: boolean = false;
 
-    constructor(scene: Scene, x: number, y: number, textBox: TextBox) {
+    constructor(scene: Scene, x: number, y: number) {
         super(scene, x, y, 'player');
-        this.textBox = textBox;
         scene.physics.add.existing(this);
         scene.add.existing(this);
         this.setCollideWorldBounds(true);
@@ -35,6 +34,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     public update(cursors: Phaser.Types.Input.Keyboard.CursorKeys, speed: number) {
+        if (this.isInBattle) {
+            this.setVelocity(0);
+            return;
+        }
+
         this.setVelocity(0);
         const direction = cursors.left?.isDown ? 'left' : cursors.right?.isDown
             ? 'right' : cursors.up?.isDown

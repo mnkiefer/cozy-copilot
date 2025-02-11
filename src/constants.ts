@@ -1,7 +1,6 @@
 export const GAME_SETTINGS = {
     TITLE: 'GitHub Guardians',
     VERSION: '1.0.0',
-    IS_MUTED: false,
     IS_PAUSED: false,
     IS_DEBUG: false,
     IS_FULLSCREEN: false,

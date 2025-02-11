@@ -3,7 +3,7 @@ import { Scene } from 'phaser';
 import Player from '../objects/Player';
 import TextBox from '../objects/TextBox';
 
-import { GAME_SETTINGS, PLAYER_CONSTANTS } from '../constants';
+import { PLAYER_CONSTANTS } from '../constants';
 
 import type { Tilemaps } from 'phaser';
 
@@ -17,7 +17,6 @@ export class World extends Scene {
 
     private battleZones!: Phaser.Tilemaps.TilemapLayer;
     public canEnterBattle: boolean = true;
-    private lastBattleCheck: number = 0;
     private lastBattleTile: Phaser.Tilemaps.Tile | null = null;
 
     constructor() {
@@ -32,32 +31,31 @@ export class World extends Scene {
         this.playBackgroundMusic();
 
         this.textBox = new TextBox(this);
-        this.textBox.create("Be careful! There might be 🪲 bugs 🐛 lurking around here. Use the arrow keys to move around and explore.");
+        this.textBox.create(`Be careful! There might be 🪲 bugs 🐛 lurking about. Use the ← ↑ → ↓ keys to move around and explore...`);
 
         this.events.on('update', () => this.update());
-        this.events.on('resume', () => this.player.isTransitioning = false);
     }
 
     update() {
         if (!this.player || !this.cursors) return;
 
-        this.player.update(this.cursors, PLAYER_CONSTANTS.MOVEMENT_SPEED);
+        if (!this.scene.isPaused()) {
+            this.player.update(this.cursors, PLAYER_CONSTANTS.MOVEMENT_SPEED);
+            this.sound.get('world')?.resume();
+        }
 
-        // Check for battle zone collision
+        // Enter battle if the player is in a battle zone
         if (this.battleZones && this.canEnterBattle) {
-            const playerTilePos = this.battleZones.worldToTileXY(this.player.x, this.player.y);
-            const tile = this.battleZones.getTileAt(playerTilePos.x, playerTilePos.y);
-
-            if (tile && (!this.lastBattleTile || this.lastBattleTile !== tile)) {
+            const tile = this.battleZones.getTileAtWorldXY(this.player.x, this.player.y);
+            if (tile && tile !== this.lastBattleTile) {
                 this.lastBattleTile = tile;
-                if (Math.random() < 0.2) { // 20% chance to trigger battle
-                    this.startBattle();
-                }
+                this.startBattle();
             } else if (!tile) {
                 this.lastBattleTile = null;
             }
         }
 
+        // Exit the game if the player reaches the end of the map
         if (this.player.x > this.map.widthInPixels - 50) {
             this.exitGame();
         }
@@ -83,7 +81,7 @@ export class World extends Scene {
     }
 
     private initPlayer() {
-        this.player = new Player(this, 500, 50, this.textBox);
+        this.player = new Player(this, 500, 50);
         this.physics.add.collider(this.player, this.worldLayer);
         this.cameras.main.startFollow(this.player, true, 0.09, 0.09);
     }
@@ -95,52 +93,50 @@ export class World extends Scene {
     }
 
     private playBackgroundMusic() {
-        this.sound.play('music-opening', {
+       this.sound.add('world', {
             loop: true,
             volume: 0.5
         });
+        this.sound.play('world');
     }
 
     private startBattle() {
         if (!this.canEnterBattle) return;
-        this.canEnterBattle = false;
-        this.player.isTransitioning = true;
 
-        const currentMusic = this.sound.get('music-opening');
+        this.canEnterBattle = false;
+        this.player.isInBattle = true;
+        this.player.isTransitioning = true;
+        this.player.setVelocity(0, 0);
+        this.player.anims.stop();
+
+        this.sound.pauseAll();
+
         const battleMusic = this.sound.add('battle', {
             volume: 0,
-            loop: true,
-            mute: GAME_SETTINGS.IS_MUTED
+            loop: true
         });
 
-        this.cameras.main.flash(200);
+        this.cameras.main.flash(400);
 
-        // Fade out current music
-        if (currentMusic && !GAME_SETTINGS.IS_MUTED) {
-            this.tweens.add({
-                targets: currentMusic,
-                volume: 0,
-                duration: 400
-            });
-        }
+        this.tweens.add({
+            targets: battleMusic,
+            volume: 0.5,
+            duration: 1000
+        });
 
-        // Fade in battle music
-        if (!GAME_SETTINGS.IS_MUTED) {
-            this.tweens.add({
-                targets: battleMusic,
-                volume: 0.5,
-                duration: 400
-            });
-        }
+        this.cameras.main.fadeOut(800, 0, 0, 0);
 
-        this.cameras.main.fadeOut(250, 0, 0, 0);
-
-        this.time.delayedCall(250, () => {
+        this.time.delayedCall(800, () => {
             this.scene.launch('Battle', {
                 battleMusic,
                 onBattleEnd: () => {
+                    this.player.isInBattle = false;
+                    this.player.isTransitioning = false;
+
+                    this.sound.resumeAll();
+
                     this.scene.resume();
-                    this.cameras.main.fadeIn(250);
+                    this.cameras.main.fadeIn(800);
                     this.time.delayedCall(2000, () => {
                         this.canEnterBattle = true;
                     });
@@ -152,22 +148,16 @@ export class World extends Scene {
 
     private exitGame() {
         this.player.isTransitioning = true;
-        this.player.setVelocity(0, 0);  // Stop player movement
-        this.player.anims.stop();  // Stop any running animation
-        this.cursors.left.enabled = false;  // Disable input
+        this.player.setVelocity(0, 0);
+        this.player.anims.stop();
+        this.cursors.left.enabled = false;
         this.cursors.right.enabled = false;
         this.cursors.up.enabled = false;
         this.cursors.down.enabled = false;
 
         this.textBox.create("End of Demo - Thank you for playing!", () => {
-            const currentMusic = this.sound.get('music-opening');
-            if (currentMusic && !GAME_SETTINGS.IS_MUTED) {
-                this.tweens.add({
-                    targets: currentMusic,
-                    volume: 0,
-                    duration: 400
-                });
-            }
+            this.sound.stopAll();
+
             this.cameras.main.fadeOut(250, 0, 0, 0);
             this.time.delayedCall(250, () => {
                 this.scene.start('MainMenu');
