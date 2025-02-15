@@ -1,6 +1,25 @@
 import type { Scene } from 'phaser';
 
+const actions = ['DEBUG', 'COMPANIONS', 'ITEMS', 'RUN'];
+
+interface BattleTextBoxConfig {
+    width?: number;
+    height?: number;
+    fontSize?: number;
+    padding?: number;
+    borderRadius?: number;
+    textSpeed?: number;
+}
+
 export default class TextBoxBattle {
+    private static readonly DEFAULT_CONFIG: BattleTextBoxConfig = {
+        width: 0.8,
+        height: 0.2,
+        fontSize: 32,
+        padding: 20,
+        borderRadius: 20,
+        textSpeed: 40
+    };
     private scene: Scene;
     private textBox!: Phaser.GameObjects.Text;
     private textBoxBackground!: Phaser.GameObjects.Graphics;
@@ -41,7 +60,7 @@ export default class TextBoxBattle {
         this.textBox = this.scene.add.text(textBoxX + 30, textBoxY + 30, '', {
             fontSize: '32px',
             color: '#ffffff',
-            wordWrap: { width: textBoxWidth },
+            wordWrap: { width: textBoxWidth - 60 },
             padding: { left: 20, right: 20, top: 20, bottom: 20 }
         });
         this.textBox.setDepth(textBoxDepth);
@@ -62,8 +81,6 @@ export default class TextBoxBattle {
         actionFrame.strokeRoundedRect(actionBoxX + 10, textBoxY + 10, actionBoxWidth - 20, actionBoxHeight - 20, 15);
         actionFrame.setDepth(textBoxDepth);
 
-        const actions = ['DEBUG', 'FRIENDS', 'DEVTOOLS', 'ITEMS', 'RUN'];
-        const actionColors = ['#ff0000', '#00ff00', 'cyan', 'pink', '#ffffff'];
         this.actionTexts = [];
         actions.forEach((action, index) => {
             const actionText = this.scene.add.text(
@@ -72,7 +89,7 @@ export default class TextBoxBattle {
                 action,
                 {
                     fontSize: '35px',
-                    color: actionColors[index],
+                    color: 'white',
                     padding: { left: 10, right: 10, top: 10, bottom: 10 }
                 }
             ).setOrigin(0.5)
@@ -106,7 +123,7 @@ export default class TextBoxBattle {
         }
 
         this.updateText(message);
-    }
+        }
 
     private createSubMenu(actions: string[], color: string) {
         // Add "BACK" option to the submenu
@@ -189,7 +206,7 @@ export default class TextBoxBattle {
             if (selectedSubAction === 'BACK') {
                 this.closeSubMenu();
             } else {
-                this.updateText(`Used ${selectedSubAction}!\nIt's super effective!`);
+                this.applyActionEffect(selectedSubAction);
                 this.closeSubMenu();
             }
         } else {
@@ -204,11 +221,42 @@ export default class TextBoxBattle {
                     }
                 });
             } else {
-                const subActions = ['Option 1', 'Option 2', 'Option 3'];
-                const actionColor = this.actionTexts[this.selectedIndex].style.color;
+                let subActions: string[] = [];
+                const actionColor = 'white';
+                switch (selectedAction) {
+                    case 'DEBUG':
+                        subActions = ['Console Log', 'Use Debugger', 'Run Profiler'];
+                        break;
+                    case 'COMPANIONS':
+                        subActions = ['Copilot'];
+                        break;
+                    case 'ITEMS':
+                        subActions = ['☕️ Coffee'];
+                        break;
+                    default:
+                        subActions = [];
+                        break;
+                }
                 this.createSubMenu(subActions, actionColor as string);
             }
         }
+    }
+
+    private applyActionEffect(subAction: string) {
+        const damage = 10; // Example damage value
+
+        // Play effect of the same color as the action
+        const effectColor = this.actionTexts[this.selectedIndex].style.color as string;
+        const effect = this.scene.add.graphics();
+        effect.fillStyle(parseInt(effectColor.replace('#', '0x')), 1);
+        this.scene.tweens.add({
+            targets: effect,
+            alpha: 0,
+            duration: 500,
+            onComplete: () => effect.destroy()
+        });
+
+        this.updateText(`Used ${subAction}!\nEnemy took ${damage} damage!`);
     }
 
     private updateArrowPosition() {
@@ -218,17 +266,15 @@ export default class TextBoxBattle {
         this.arrow.setX(selectedText.x - selectedText.width / 2 - this.arrow.width - offset);
         this.arrow.setY(selectedText.y);
 
-        // Change arrow color based on selected action
-        const actionColors = this.isSubMenuActive ? ['#ff0000', '#00ff00', 'cyan'] : ['#ff0000', '#00ff00', 'cyan', 'pink', '#ffffff'];
-        this.arrow.setColor(actionColors[this.selectedIndex]);
+        this.arrow.setColor('white');
 
-        // Add glow effect to the selected text
+        // Remove glow effect from the selected text
         const texts = this.isSubMenuActive ? this.subMenuTexts : this.actionTexts;
         texts.forEach((text, index) => {
             if (index === this.selectedIndex) {
-                text.setStyle({ fontSize: '40px', fontStyle: 'bold', shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 5, stroke: true, fill: true } });
+                text.setStyle({ fontSize: '40px', fontStyle: 'bold' });
             } else {
-                text.setStyle({ fontSize: '35px', fontStyle: 'normal', shadow: { offsetX: 0, offsetY: 0, color: '#000', blur: 0, stroke: false, fill: false } });
+                text.setStyle({ fontSize: '35px', fontStyle: 'normal' });
             }
         });
 

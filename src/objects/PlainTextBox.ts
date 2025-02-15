@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import type { Scene } from 'phaser';
 
-interface TextBoxConfig {
+interface PlainTextBoxConfig {
     width?: number;
     height?: number;
     fontSize?: number;
@@ -10,8 +10,8 @@ interface TextBoxConfig {
     textSpeed?: number;
 }
 
-export default class TextBox {
-    private static readonly DEFAULT_CONFIG: TextBoxConfig = {
+export default class PlainTextBox {
+    private static readonly DEFAULT_CONFIG: PlainTextBoxConfig = {
         width: 0.8,
         height: 0.2,
         fontSize: 32,
@@ -27,14 +27,14 @@ export default class TextBox {
     private innerFrame!: Phaser.GameObjects.Graphics;
     private button?: Phaser.GameObjects.Text;
     private depth: number = 1000;
-    private config: TextBoxConfig;
+    private config: PlainTextBoxConfig;
     private dimensions: { width: number; height: number; x: number; y: number; };
     private messageQueue: Array<{text: string, callback?: () => void}> = [];
     private isProcessingQueue: boolean = false;
 
-    constructor(scene: Scene, config: Partial<TextBoxConfig> = {}) {
+    constructor(scene: Scene, config: Partial<PlainTextBoxConfig> = {}) {
         this.scene = scene;
-        this.config = { ...TextBox.DEFAULT_CONFIG, ...config };
+        this.config = { ...PlainTextBox.DEFAULT_CONFIG, ...config };
         this.dimensions = this.calculateDimensions();
     }
 

@@ -2,7 +2,7 @@ import { Scene } from 'phaser';
 
 import Player from '../objects/Player';
 import Companion from '../objects/Companion';
-import TextBox from '../objects/TextBox';
+import PlainTextBox from '../objects/PlainTextBox';
 
 import { PLAYER_CONSTANTS } from '../constants';
 
@@ -14,7 +14,7 @@ export class World extends Scene {
     private player!: Player;
     private map!: Phaser.Tilemaps.Tilemap;
     private worldLayer!: Phaser.Tilemaps.TilemapLayer;
-    private textBox!: TextBox;
+    private textBox!: PlainTextBox;
     private companion!: Companion;
 
     private battleZones!: Phaser.Tilemaps.TilemapLayer;
@@ -33,7 +33,7 @@ export class World extends Scene {
 
         this.playBackgroundMusic();
 
-        this.textBox = new TextBox(this);
+        this.textBox = new PlainTextBox(this);
         this.textBox.create(`Be careful! There might be 🪲 bugs 🐛 lurking about. Use the ← ↑ → ↓ keys to move around and explore...`);
 
         this.events.on('update', () => this.update());

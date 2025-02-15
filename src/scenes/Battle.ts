@@ -1,5 +1,6 @@
 import { Scene } from 'phaser';
-import BattleTextBox from '../objects/TextBoxBattle';
+import BattleTextBox from '../objects/BattleTextBox';
+import HealthBar from '../objects/HealthBar';
 
 import type { World } from './World';
 
@@ -8,11 +9,9 @@ export class Battle extends Scene {
     private battleMusic!: Phaser.Sound.BaseSound;
     private onBattleEnd!: () => void;
 
-    // New properties for enemy health bar
-    private enemyMaxHealth: number = 100;
-    private enemyHealth: number = 100;
-    private enemyHealthBar!: Phaser.GameObjects.Graphics;
-    private enemyHealthBarInfo!: { x: number, y: number, width: number, height: number };
+    // Remove old health bar properties
+    private enemyHealthBar!: HealthBar;
+    private playerHealthBar!: HealthBar;
 
     constructor() {
         super('Battle');
@@ -32,12 +31,7 @@ export class Battle extends Scene {
         this.cameras.main.fadeIn(500);
         this.textBox = new BattleTextBox(this, () => this.exitBattle());
         this.startBattle();
-
-        // Debug: pressing "D" reduces enemy health by 10
-        this.input.keyboard?.on('keydown-D', () => {
-            this.enemyHealth = Math.max(0, this.enemyHealth - 10);
-            this.updateEnemyHealthBar();
-        });
+        this.createHealthBars('PLAYER', 'SYNTAX SPIDER');
     }
 
     private startBattle() {
@@ -58,22 +52,6 @@ export class Battle extends Scene {
             duration: 1000,
             ease: 'Power2'
         });
-        // Setup enemy health bar for debugging (health decreases as you press "D")
-        {
-            const barX = enemyFinalX - enemySprite.displayWidth / 2;
-            const barY = enemyFinalY - enemySprite.displayHeight / 2 - 15;
-            const barWidth = enemySprite.displayWidth;
-            const barHeight = 10;
-            this.enemyHealthBarInfo = { x: barX, y: barY, width: barWidth, height: barHeight };
-            this.enemyHealthBar = this.add.graphics();
-            this.enemyHealthBar.setAlpha(0.7);
-            this.updateEnemyHealthBar();
-        }
-        // Add enemy health label "Mystery"
-        this.add.text(enemyFinalX, enemyFinalY - enemySprite.displayHeight / 2 - 30, 'Mystery', {
-            fontSize: '32px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
 
         // Player sprite: starting off-screen right then tween to final position
         const playerFinalX = this.cameras.main.width * 0.25;
@@ -87,47 +65,17 @@ export class Battle extends Scene {
             duration: 1000,
             ease: 'Power2'
         });
-        // Add fancy player health bar
-        {
-            const barGraphics = this.add.graphics();
-            barGraphics.setAlpha(0.7); // healthbar semi-transparent
-            const barX = playerFinalX - playerSprite.displayWidth / 2;
-            const barY = playerFinalY - playerSprite.displayHeight / 2 - 15;
-            const barWidth = playerSprite.displayWidth;
-            const barHeight = 10;
-            // Draw border
-            barGraphics.fillStyle(0x000000);
-            barGraphics.fillRoundedRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4, 3);
-            // Draw new background color
-            barGraphics.fillStyle(0x555555);
-            barGraphics.fillRoundedRect(barX, barY, barWidth, barHeight, 3);
-            // Draw new health fill color
-            barGraphics.fillStyle(0x00ffcc);
-            barGraphics.fillRoundedRect(barX, barY, barWidth, barHeight, 3);
-        }
-        // Add player health label "Patience"
-        this.add.text(playerFinalX, playerFinalY - playerSprite.displayHeight / 2 - 30, 'Patience', {
-            fontSize: '32px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
 
-        this.textBox.create('A wild Bug appeared...\nIt\'s a SYNTAX SPIDER!\n\nWhat will you do?');
+        this.textBox.create('A wild Bug appeared...\n\n\nWhat will you do?');
     }
 
-    // New helper method to update enemy health bar
-    private updateEnemyHealthBar() {
-        const { x, y, width, height } = this.enemyHealthBarInfo;
-        this.enemyHealthBar.clear();
-        // Draw border
-        this.enemyHealthBar.fillStyle(0x000000);
-        this.enemyHealthBar.fillRoundedRect(x - 2, y - 2, width + 4, height + 4, 3);
-        // Draw background
-        this.enemyHealthBar.fillStyle(0x555555);
-        this.enemyHealthBar.fillRoundedRect(x, y, width, height, 3);
-        // Draw health fill proportional to current health
-        const fillWidth = (this.enemyHealth / this.enemyMaxHealth) * width;
-        this.enemyHealthBar.fillStyle(0x00ffcc);
-        this.enemyHealthBar.fillRoundedRect(x, y, fillWidth, height, 3);
+    // New method to create health bars
+    private createHealthBars(playerName: string, enemyName: string) {
+        // Enemy health bar with name and experience level
+        this.enemyHealthBar = new HealthBar(this, this.cameras.main.originX, 50, enemyName, 'Lv. 5'); // width changed to 400, color changed to green
+
+        // Player health bar with name and experience level
+        this.playerHealthBar = new HealthBar(this, this.cameras.main.width - 500, this.cameras.main.height - 400, playerName, 'Lv. 10'); // width changed to 400, color changed to green
     }
 
     private exitBattle() {
