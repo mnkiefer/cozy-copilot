@@ -6,9 +6,11 @@ export default class TextBoxBattle {
     private textBoxBackground!: Phaser.GameObjects.Graphics;
     private innerFrame!: Phaser.GameObjects.Graphics;
     private actionTexts: Phaser.GameObjects.Text[] = [];
+    private subMenuTexts: Phaser.GameObjects.Text[] = [];
     private selectedIndex: number = 0;
     private arrow!: Phaser.GameObjects.Text;
     private exitCallback: () => void;
+    private isSubMenuActive: boolean = false;
 
     constructor(scene: Scene, exitCallback: () => void) {
         this.scene = scene;
@@ -61,7 +63,7 @@ export default class TextBoxBattle {
         actionFrame.setDepth(textBoxDepth);
 
         const actions = ['DEBUG', 'FRIENDS', 'DEVTOOLS', 'ITEMS', 'RUN'];
-        const actionColors = ['#ff0000', '#00ff00', 'cyan', 'pink', '#ffff00'];
+        const actionColors = ['#ff0000', '#00ff00', 'cyan', 'pink', '#ffffff'];
         this.actionTexts = [];
         actions.forEach((action, index) => {
             const actionText = this.scene.add.text(
@@ -89,7 +91,7 @@ export default class TextBoxBattle {
         // Add arrow animation with pulsing effect
         this.scene.tweens.add({
             targets: this.arrow,
-            scaleX: 1.2, // animate scale for emphasis
+            scaleX: 1.2,
             scaleY: 1.2,
             duration: 500,
             yoyo: true,
@@ -100,50 +102,129 @@ export default class TextBoxBattle {
             this.scene.input.keyboard.on('keydown-UP', () => this.moveSelectionUp());
             this.scene.input.keyboard.on('keydown-DOWN', () => this.moveSelectionDown());
             this.scene.input.keyboard.on('keydown-ENTER', () => this.selectAction());
+            this.scene.input.keyboard.on('keydown-ESC', () => this.closeSubMenu());
         }
 
         this.updateText(message);
     }
 
+    private createSubMenu(actions: string[], color: string) {
+        // Add "BACK" option to the submenu
+        actions.push('BACK');
+
+        const camera = this.scene.cameras.main;
+        const textBoxWidth = camera.width * 0.5;
+        const textBoxHeight = camera.height * 0.25;
+        const textBoxX = camera.scrollX + (camera.width - textBoxWidth * 1.8) / 2;
+        const textBoxY = camera.scrollY + camera.height - textBoxHeight - (camera.height * 0.05);
+        const textBoxDepth = 30;
+
+        const subMenuX = textBoxX + textBoxWidth + 20;
+        const subMenuWidth = textBoxWidth * 0.7;
+        const subMenuHeight = textBoxHeight;
+
+        const subMenuBackground = this.scene.add.graphics();
+        subMenuBackground.fillStyle(0x333333, 0.9);
+        subMenuBackground.fillRoundedRect(subMenuX, textBoxY, subMenuWidth, subMenuHeight, 20);
+        subMenuBackground.lineStyle(2, 0xffffff, 1);
+        subMenuBackground.strokeRoundedRect(subMenuX, textBoxY, subMenuWidth, subMenuHeight, 20);
+        subMenuBackground.setDepth(textBoxDepth);
+        subMenuBackground.setName('subMenuBackground');
+
+        const subMenuFrame = this.scene.add.graphics();
+        subMenuFrame.lineStyle(2, 0xffffff, 1);
+        subMenuFrame.strokeRoundedRect(subMenuX + 10, textBoxY + 10, subMenuWidth - 20, subMenuHeight - 20, 15);
+        subMenuFrame.setDepth(textBoxDepth);
+        subMenuFrame.setName('subMenuFrame');
+
+        this.subMenuTexts = [];
+        actions.forEach((action, index) => {
+            const actionText = this.scene.add.text(
+                subMenuX + subMenuWidth / 2,
+                textBoxY + 50 + index * 40,
+                action,
+                {
+                    fontSize: '35px',
+                    color: action === 'BACK' ? '#ffffff' : color,
+                    padding: { left: 10, right: 10, top: 10, bottom: 10 }
+                }
+            ).setOrigin(0.5)
+             .setInteractive();
+            actionText.setDepth(textBoxDepth);
+            this.subMenuTexts.push(actionText);
+        });
+
+        this.isSubMenuActive = true;
+        this.selectedIndex = 0;
+        this.updateArrowPosition();
+    }
+
+    private closeSubMenu() {
+        if (this.isSubMenuActive) {
+            this.subMenuTexts.forEach(text => text.destroy());
+            this.subMenuTexts = [];
+            this.isSubMenuActive = false;
+            this.selectedIndex = 0;
+            this.updateArrowPosition();
+
+            // Hide submenu background and frame
+            this.scene.children.getByName('subMenuBackground')?.destroy();
+            this.scene.children.getByName('subMenuFrame')?.destroy();
+        }
+    }
+
     private moveSelectionUp() {
-        this.selectedIndex = (this.selectedIndex - 1 + this.actionTexts.length) % this.actionTexts.length;
+        this.selectedIndex = (this.selectedIndex - 1 + (this.isSubMenuActive ? this.subMenuTexts.length : this.actionTexts.length)) % (this.isSubMenuActive ? this.subMenuTexts.length : this.actionTexts.length);
         this.updateArrowPosition();
     }
 
     private moveSelectionDown() {
-        this.selectedIndex = (this.selectedIndex + 1) % this.actionTexts.length;
+        this.selectedIndex = (this.selectedIndex + 1) % (this.isSubMenuActive ? this.subMenuTexts.length : this.actionTexts.length);
         this.updateArrowPosition();
     }
 
     private selectAction() {
-        const selectedAction = this.actionTexts[this.selectedIndex].text;
-        if (selectedAction === 'RUN') {
-            this.updateText('Got away safely!');
-            this.scene.time.addEvent({
-                delay: 500,
-                callback: () => {
-                    this.closeTextBox();
-                    this.exitCallback();
-                }
-            });
+        if (this.isSubMenuActive) {
+            const selectedSubAction = this.subMenuTexts[this.selectedIndex].text;
+            if (selectedSubAction === 'BACK') {
+                this.closeSubMenu();
+            } else {
+                this.updateText(`Used ${selectedSubAction}!\nIt's super effective!`);
+                this.closeSubMenu();
+            }
         } else {
-            this.updateText(`Used ${selectedAction}!\nIt's super effective!`);
+            const selectedAction = this.actionTexts[this.selectedIndex].text;
+            if (selectedAction === 'RUN') {
+                this.updateText('Got away safely!');
+                this.scene.time.addEvent({
+                    delay: 500,
+                    callback: () => {
+                        this.closeTextBox();
+                        this.exitCallback();
+                    }
+                });
+            } else {
+                const subActions = ['Option 1', 'Option 2', 'Option 3'];
+                const actionColor = this.actionTexts[this.selectedIndex].style.color;
+                this.createSubMenu(subActions, actionColor as string);
+            }
         }
     }
 
     private updateArrowPosition() {
-        const selectedText = this.actionTexts[this.selectedIndex];
+        const selectedText = this.isSubMenuActive ? this.subMenuTexts[this.selectedIndex] : this.actionTexts[this.selectedIndex];
         const offset = 2;
         // Position arrow to the left of the selected text without overlapping it
         this.arrow.setX(selectedText.x - selectedText.width / 2 - this.arrow.width - offset);
         this.arrow.setY(selectedText.y);
 
         // Change arrow color based on selected action
-        const actionColors = ['#ff0000', '#00ff00', 'cyan', 'pink', '#ffff00'];
+        const actionColors = this.isSubMenuActive ? ['#ff0000', '#00ff00', 'cyan'] : ['#ff0000', '#00ff00', 'cyan', 'pink', '#ffffff'];
         this.arrow.setColor(actionColors[this.selectedIndex]);
 
         // Add glow effect to the selected text
-        this.actionTexts.forEach((text, index) => {
+        const texts = this.isSubMenuActive ? this.subMenuTexts : this.actionTexts;
+        texts.forEach((text, index) => {
             if (index === this.selectedIndex) {
                 text.setStyle({ fontSize: '40px', fontStyle: 'bold', shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 5, stroke: true, fill: true } });
             } else {
