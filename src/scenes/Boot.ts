@@ -18,6 +18,8 @@ export class Boot extends Scene {
 
         // Load spritesheets
         this.load.atlas('player', 'spritesheets/player.png', 'spritesheets/player.json');
+        this.load.atlas('ducky', 'spritesheets/ducky.png', 'spritesheets/ducky.json');
+        this.load.atlas('copilot', 'spritesheets/copilot.png', 'spritesheets/copilot.json');
 
         // Load image files
         this.load.image('cartoon-player', 'avatars/cartoon-player.png');

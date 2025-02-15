@@ -20,7 +20,7 @@
   "meta": {
     "app": "https://www.aseprite.org/",
     "version": "1.3.9.2-arm64",
-    "image": "ducky.png",
+    "image": "copilot.png",
     "format": "RGBA8888",
     "size": { "w": 256, "h": 320 },
     "scale": "1",

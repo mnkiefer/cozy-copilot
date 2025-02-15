@@ -1,6 +1,7 @@
 import { Scene } from 'phaser';
 
 import Player from '../objects/Player';
+import Companion from '../objects/Companion';
 import TextBox from '../objects/TextBox';
 
 import { PLAYER_CONSTANTS } from '../constants';
@@ -14,6 +15,7 @@ export class World extends Scene {
     private map!: Phaser.Tilemaps.Tilemap;
     private worldLayer!: Phaser.Tilemaps.TilemapLayer;
     private textBox!: TextBox;
+    private companion!: Companion;
 
     private battleZones!: Phaser.Tilemaps.TilemapLayer;
     public canEnterBattle: boolean = true;
@@ -25,7 +27,8 @@ export class World extends Scene {
 
     create() {
         this.initMap();
-        this.initPlayer();
+        this.initPlayer(500, 100);
+        this.initCompanion('copilot', 450, 0);
         this.initKeyboard();
 
         this.playBackgroundMusic();
@@ -36,6 +39,10 @@ export class World extends Scene {
         this.events.on('update', () => this.update());
     }
 
+    private initCompanion(companion: string, x: number, y: number, frameRate: number = 1) {
+        this.companion = new Companion(companion, this, x, y, frameRate);
+    }
+
     update() {
         if (!this.player || !this.cursors) return;
 
@@ -43,6 +50,9 @@ export class World extends Scene {
             this.player.update(this.cursors, PLAYER_CONSTANTS.MOVEMENT_SPEED);
             this.sound.get('world')?.resume();
         }
+
+        this.updateCompanion(this.companion, 100);
+        this.updateDepths();
 
         // Enter battle if the player is in a battle zone
         if (this.battleZones && this.canEnterBattle) {
@@ -61,6 +71,44 @@ export class World extends Scene {
         }
     }
 
+    private updateCompanion(companion: Phaser.Physics.Arcade.Sprite, springLength: number) {
+        if (this.cursors.left.isDown || this.cursors.right.isDown || this.cursors.up.isDown || this.cursors.down.isDown) {
+            const dx = this.player.x - companion.x;
+            const dy = this.player.y - companion.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const force = (distance - springLength) * 3;
+
+            const angle = Math.atan2(dy, dx);
+            const fx = Math.cos(angle) * force;
+            const fy = Math.sin(angle) * force;
+
+            companion.setVelocity(fx, fy);
+
+            // Decide on one direction to avoid switching back and forth repeatedly
+            if (companion.body) {
+                const absVelocityX = Math.abs(companion.body.velocity.x);
+                const absVelocityY = Math.abs(companion.body.velocity.y);
+
+                if (absVelocityX > absVelocityY) {
+                    if (companion.body.velocity.x < 0) companion.anims.play('move-left', true);
+                    else if (companion.body.velocity.x > 0) companion.anims.play('move-right', true);
+                } else {
+                    if (companion.body.velocity.y < 0) companion.anims.play('move-up', true);
+                    else if (companion.body.velocity.y > 0) companion.anims.play('move-down', true);
+                }
+            }
+        } else {
+            companion.setVelocity(0, 0);
+        }
+    }
+
+    private updateDepths() {
+        const sprites = [this.player, this.companion];
+        sprites.sort((a, b) => a.y - b.y);
+        sprites.forEach((sprite, index) => {
+            sprite.setDepth(index);
+        });
+    }
 
     private initMap() {
         this.map = this.make.tilemap({ key: "map" });
@@ -80,8 +128,8 @@ export class World extends Scene {
         this.battleZones.setVisible(false);
     }
 
-    private initPlayer() {
-        this.player = new Player(this, 500, 50);
+    private initPlayer(x: number = 0, y: number = 0) {
+        this.player = new Player(this, x, y);
         this.physics.add.collider(this.player, this.worldLayer);
         this.cameras.main.startFollow(this.player, true, 0.09, 0.09);
     }
