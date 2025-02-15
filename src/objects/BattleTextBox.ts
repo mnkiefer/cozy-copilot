@@ -11,8 +11,8 @@ interface BattleTextBoxConfig {
     textSpeed?: number;
 }
 
-export default class TextBoxBattle {
-    private static readonly DEFAULT_CONFIG: BattleTextBoxConfig = {
+export default class BattleTextBox {
+    public static readonly DEFAULT_CONFIG: BattleTextBoxConfig = {
         width: 0.8,
         height: 0.2,
         fontSize: 32,
@@ -105,7 +105,6 @@ export default class TextBoxBattle {
           .setDepth(textBoxDepth);
         this.updateArrowPosition();
 
-        // Add arrow animation with pulsing effect
         this.scene.tweens.add({
             targets: this.arrow,
             scaleX: 1.2,
@@ -243,20 +242,90 @@ export default class TextBoxBattle {
     }
 
     private applyActionEffect(subAction: string) {
-        const damage = 10; // Example damage value
-
-        // Play effect of the same color as the action
-        const effectColor = this.actionTexts[this.selectedIndex].style.color as string;
-        const effect = this.scene.add.graphics();
-        effect.fillStyle(parseInt(effectColor.replace('#', '0x')), 1);
-        this.scene.tweens.add({
-            targets: effect,
-            alpha: 0,
-            duration: 500,
-            onComplete: () => effect.destroy()
-        });
+        const damage = 10;
 
         this.updateText(`Used ${subAction}!\nEnemy took ${damage} damage!`);
+
+        const enemySprite = this.scene.children.getByName('enemySprite') as Phaser.GameObjects.Image;
+        if (enemySprite) {
+            console.log(`Applying effect to enemySprite for action: ${subAction}`);
+            switch (subAction) {
+                case 'Console Log':
+                    this.scene.tweens.add({
+                        targets: enemySprite,
+                        angle: 360,
+                        duration: 1000,
+                        ease: 'Power2',
+                        onComplete: () => console.log('Console Log effect completed on enemySprite')
+                    });
+                    break;
+                case 'Use Debugger':
+                    this.scene.tweens.add({
+                        targets: enemySprite,
+                        alpha: 0,
+                        duration: 500,
+                        yoyo: true,
+                        repeat: 1,
+                        onComplete: () => console.log('Use Debugger effect completed on enemySprite')
+                    });
+                    break;
+                case 'Run Profiler':
+                    this.scene.tweens.add({
+                        targets: enemySprite,
+                        scaleX: 1.5,
+                        scaleY: 1.5,
+                        duration: 500,
+                        yoyo: true,
+                        onComplete: () => console.log('Run Profiler effect completed on enemySprite')
+                    });
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            console.error('enemySprite not found');
+        }
+
+        // Add visual effects on the player sprite
+        const playerSprite = this.scene.children.getByName('playerSprite') as Phaser.GameObjects.Image;
+        if (playerSprite) {
+            console.log(`Applying effect to playerSprite for action: ${subAction}`);
+            switch (subAction) {
+                case 'Console Log':
+                    this.scene.tweens.add({
+                        targets: playerSprite,
+                        angle: -360,
+                        duration: 1000,
+                        ease: 'Power2',
+                        onComplete: () => console.log('Console Log effect completed on playerSprite')
+                    });
+                    break;
+                case 'Use Debugger':
+                    this.scene.tweens.add({
+                        targets: playerSprite,
+                        alpha: 0,
+                        duration: 500,
+                        yoyo: true,
+                        repeat: 1,
+                        onComplete: () => console.log('Use Debugger effect completed on playerSprite')
+                    });
+                    break;
+                case 'Run Profiler':
+                    this.scene.tweens.add({
+                        targets: playerSprite,
+                        scaleX: 1.5,
+                        scaleY: 1.5,
+                        duration: 500,
+                        yoyo: true,
+                        onComplete: () => console.log('Run Profiler effect completed on playerSprite')
+                    });
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            console.error('playerSprite not found');
+        }
     }
 
     private updateArrowPosition() {

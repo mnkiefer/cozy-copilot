@@ -8,10 +8,8 @@ export class Battle extends Scene {
     private textBox!: BattleTextBox;
     private battleMusic!: Phaser.Sound.BaseSound;
     private onBattleEnd!: () => void;
-
-    // Remove old health bar properties
-    private enemyHealthBar!: HealthBar;
-    private playerHealthBar!: HealthBar;
+    public enemyHealthBar!: HealthBar;
+    public playerHealthBar!: HealthBar;
 
     constructor() {
         super('Battle');
@@ -40,12 +38,11 @@ export class Battle extends Scene {
             .setAlpha(0.8);
         const spriteSize = Math.min(this.cameras.main.width, this.cameras.main.height) * 0.5;
 
-        // Enemy sprite: starting off-screen left then tween to final position
         const enemyFinalX = this.cameras.main.width * 0.75;
         const enemyFinalY = this.cameras.main.height * 0.3;
-        const enemySprite = this.add.image(enemyFinalX, enemyFinalY, 'syntax-spider');
+        const enemySprite = this.add.image(enemyFinalX, enemyFinalY, 'syntax-spider').setName('enemySprite');
         enemySprite.setScale(spriteSize / Math.max(enemySprite.width, enemySprite.height));
-        enemySprite.x = -enemySprite.width; // start off-screen left
+        enemySprite.x = -enemySprite.width;
         this.tweens.add({
             targets: enemySprite,
             x: enemyFinalX,
@@ -53,12 +50,11 @@ export class Battle extends Scene {
             ease: 'Power2'
         });
 
-        // Player sprite: starting off-screen right then tween to final position
         const playerFinalX = this.cameras.main.width * 0.25;
         const playerFinalY = this.cameras.main.height * 0.48;
-        const playerSprite = this.add.image(playerFinalX, playerFinalY, 'cartoon-player');
+        const playerSprite = this.add.image(playerFinalX, playerFinalY, 'cartoon-player').setName('playerSprite');
         playerSprite.setScale(spriteSize / Math.max(playerSprite.width, playerSprite.height));
-        playerSprite.x = this.cameras.main.width + playerSprite.width; // start off-screen right
+        playerSprite.x = this.cameras.main.width + playerSprite.width;
         this.tweens.add({
             targets: playerSprite,
             x: playerFinalX,
@@ -69,13 +65,9 @@ export class Battle extends Scene {
         this.textBox.create('A wild Bug appeared...\n\n\nWhat will you do?');
     }
 
-    // New method to create health bars
     private createHealthBars(playerName: string, enemyName: string) {
-        // Enemy health bar with name and experience level
-        this.enemyHealthBar = new HealthBar(this, this.cameras.main.originX, 50, enemyName, 'Lv. 5'); // width changed to 400, color changed to green
-
-        // Player health bar with name and experience level
-        this.playerHealthBar = new HealthBar(this, this.cameras.main.width - 500, this.cameras.main.height - 400, playerName, 'Lv. 10'); // width changed to 400, color changed to green
+        this.enemyHealthBar = new HealthBar(this, this.cameras.main.originX, 50, enemyName, 'Lv. 5');
+        this.playerHealthBar = new HealthBar(this, this.cameras.main.width - 500, this.cameras.main.height - 400, playerName, 'Lv. 10');
     }
 
     private exitBattle() {
@@ -88,7 +80,6 @@ export class Battle extends Scene {
                 gameScene.cameras.main.resetFX();
                 gameScene.cameras.main.fadeIn(400);
 
-                // Do not reenter battle right away
                 gameScene.time.delayedCall(2000, () => {
                     gameScene.canEnterBattle = true;
                 });
