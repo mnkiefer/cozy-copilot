@@ -79,12 +79,22 @@ export default class TextBoxBattle {
             this.actionTexts.push(actionText);
         });
 
-        this.arrow = this.scene.add.text(0, 0, '→', {
+        this.arrow = this.scene.add.text(0, 0, '►', {
             fontSize: '28px',
             color: '#ffffff'
         }).setOrigin(0.5)
           .setDepth(textBoxDepth);
         this.updateArrowPosition();
+
+        // Add arrow animation with pulsing effect
+        this.scene.tweens.add({
+            targets: this.arrow,
+            scaleX: 1.2, // animate scale for emphasis
+            scaleY: 1.2,
+            duration: 500,
+            yoyo: true,
+            repeat: -1
+        });
 
         if (this.scene.input.keyboard) {
             this.scene.input.keyboard.on('keydown-UP', () => this.moveSelectionUp());
@@ -123,9 +133,25 @@ export default class TextBoxBattle {
 
     private updateArrowPosition() {
         const selectedText = this.actionTexts[this.selectedIndex];
-        const offset = 30; // space between arrow and text
-        this.arrow.setX(selectedText.x - selectedText.width / 2 - offset);
+        const offset = 2;
+        // Position arrow to the left of the selected text without overlapping it
+        this.arrow.setX(selectedText.x - selectedText.width / 2 - this.arrow.width - offset);
         this.arrow.setY(selectedText.y);
+
+        // Change arrow color based on selected action
+        const actionColors = ['#ff0000', '#00ff00', 'cyan', 'pink', '#ffff00'];
+        this.arrow.setColor(actionColors[this.selectedIndex]);
+
+        // Add glow effect to the selected text
+        this.actionTexts.forEach((text, index) => {
+            if (index === this.selectedIndex) {
+                text.setStyle({ fontSize: '40px', fontStyle: 'bold', shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 5, stroke: true, fill: true } });
+            } else {
+                text.setStyle({ fontSize: '35px', fontStyle: 'normal', shadow: { offsetX: 0, offsetY: 0, color: '#000', blur: 0, stroke: false, fill: false } });
+            }
+        });
+
+        console.log(this.arrow.x, this.arrow.y);
     }
 
     closeTextBox() {
