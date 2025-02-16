@@ -1,6 +1,7 @@
 # Cozy Copilot Game
 
-🎮 [Try it out](https://mnkiefer.github.io/cozy-copilot/)
+> [!NOTE]  
+> This work is still in progress.
 
 ## Setup
 
