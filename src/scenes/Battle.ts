@@ -1,6 +1,5 @@
 import { Scene } from 'phaser';
 import BattleInterface from '../objects/BattleInterface';
-import HealthBar from '../objects/HealthBar';
 
 import type { World } from './World';
 
@@ -8,8 +7,6 @@ export class Battle extends Scene {
     private interface!: BattleInterface;
     private battleMusic!: Phaser.Sound.BaseSound;
     private onBattleEnd!: () => void;
-    public enemyHealthBar!: HealthBar;
-    public playerHealthBar!: HealthBar;
 
     constructor() {
         super('Battle');
@@ -27,13 +24,12 @@ export class Battle extends Scene {
     }) {
         this.initializeBattleMusic(data);
         this.fadeInCamera();
-        this.createHealthBars('PLAYER', data.enemy);
 
         const spriteSize = this.calculateSpriteSize();
         this.spawnEnemySprite(spriteSize);
         this.spawnPlayerSprite(spriteSize);
 
-        this.interface.create('A wild Bug appeared...\n\n\nWhat will you do?');
+        this.interface.create('A wild Bug appeared...\n\n\nWhat will you do?', 'PLAYER', data.enemy);
     }
 
     private initializeBattleMusic(data: { battleMusic: Phaser.Sound.BaseSound, onBattleEnd: () => void }): void {
@@ -85,11 +81,6 @@ export class Battle extends Scene {
             duration: 1000,
             ease: 'Power2'
         });
-    }
-
-    private createHealthBars(playerName: string, enemyName: string) {
-        this.enemyHealthBar = new HealthBar(this, this.cameras.main.originX, 50, enemyName, 'Lv. 5');
-        this.playerHealthBar = new HealthBar(this, this.cameras.main.width - 500, this.cameras.main.height - 400, playerName, 'Lv. 10');
     }
 
     private exitBattle() {

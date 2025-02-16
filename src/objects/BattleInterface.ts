@@ -1,7 +1,11 @@
+import HealthBar from './HealthBar';
+
 import type { Scene } from 'phaser';
-import ALLIES from '../config/ALLIES';
-import ITEMS from '../config/ITEMS';
 import { applyTweenEffect } from '../utils/effects';
+
+import ALLIES from '../config/ALLIES';
+import ENEMIES from '../config/ENEMIES';
+import ITEMS from '../config/ITEMS';
 
 const actions = ['DEBUG', 'EXCHANGE', 'ITEMS', 'RUN'];
 
@@ -35,13 +39,16 @@ export default class BattleInterface {
     private isSubMenuActive: boolean = false;
     private companionSprites: Phaser.GameObjects.Image[] = [];
     private currentCompanionIndex: number = 0;
+    public enemyHealthBar!: HealthBar;
+    public playerHealthBar!: HealthBar;
 
     constructor(scene: Scene, exitCallback: () => void) {
         this.scene = scene;
         this.exitCallback = exitCallback;
     }
 
-    create(message: string) {
+    create(message: string, playerName: string, enemyName: string) {
+        this.createHealthBars(playerName, enemyName);
         const camera = this.scene.cameras.main;
 
         const textBoxWidth = camera.width * 0.5;
@@ -127,7 +134,12 @@ export default class BattleInterface {
         }
 
         this.updateText(message);
-        }
+    }
+
+    private createHealthBars(playerName: string, enemyName: string) {
+        this.enemyHealthBar = new HealthBar(this.scene, this.scene.cameras.main.originX, 50, enemyName, 'Lv. 5');
+        this.playerHealthBar = new HealthBar(this.scene, this.scene.cameras.main.width - 500, this.scene.cameras.main.height - 400, playerName, 'Lv. 10');
+    }
 
     private createSubMenu(actions: string[], color: string) {
         actions.push('BACK');
@@ -300,6 +312,59 @@ export default class BattleInterface {
             const points = attack.points;
             this.updateText(`Used ${selection}!\nEnemy took ${points} damage!`);
             applyTweenEffect(this.scene, this.scene.children.getByName('enemySprite') as Phaser.GameObjects.Image, attack.effect);
+            this.enemyHealthBar.update(this.enemyHealthBar.currentHealth - points); // Reduce enemy health
+
+            if (this.enemyHealthBar.currentHealth <= 0) {
+                this.updateText('Player has won!');
+                applyTweenEffect(this.scene, this.scene.children.getByName('enemySprite') as Phaser.GameObjects.Image, 'Dissolve with Glitter');
+                this.scene.time.addEvent({
+                    delay: 1000,
+                    callback: () => {
+                        this.updateText('Player has won!');
+                        this.scene.time.addEvent({
+                            delay: 1000,
+                            callback: () => {
+                                this.closeTextBox();
+                                this.exitCallback();
+                            }
+                        });
+                    }
+                });
+            } else {
+                this.scene.time.addEvent({
+                    delay: 1000,
+                    callback: () => {
+                        this.enemyAction();
+                    }
+                });
+            }
+        }
+    }
+
+    private enemyAction() {
+        const enemyAttacks = Object.keys(ENEMIES['SYNTAX SPIDER'].attacks);
+        const randomAttack = enemyAttacks[Math.floor(Math.random() * enemyAttacks.length)];
+        const attack = ENEMIES['SYNTAX SPIDER'].attacks[randomAttack as keyof typeof ENEMIES['SYNTAX SPIDER']['attacks']];
+        const points = attack.points;
+        this.updateText(`Enemy used ${randomAttack}!\nPlayer took ${points} damage!`);
+        applyTweenEffect(this.scene, this.scene.children.getByName('playerSprite') as Phaser.GameObjects.Image, attack.effect);
+        this.playerHealthBar.update(this.playerHealthBar.currentHealth - points); // Reduce player health
+
+        if (this.playerHealthBar.currentHealth <= 0) {
+            this.updateText('Enemy has won!');
+            this.scene.time.addEvent({
+                delay: 1000,
+                callback: () => {
+                    this.updateText('Enemy has won!');
+                    this.scene.time.addEvent({
+                        delay: 1000,
+                        callback: () => {
+                            this.closeTextBox();
+                            this.exitCallback();
+                        }
+                    });
+                }
+            });
         }
     }
 

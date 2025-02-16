@@ -7,18 +7,19 @@ export default class HealthBar {
     private width: number;
     private height: number;
     private maxHealth: number;
-    private currentHealth: number;
+    public currentHealth: number;
     private color: number;
     private healthBar: Phaser.GameObjects.Graphics;
     private nameText: Phaser.GameObjects.Text;
     private expText: Phaser.GameObjects.Text;
+    private healthText: Phaser.GameObjects.Text;
 
     constructor(scene: Scene, x: number, y: number, name: string, expLevel: string) {
         this.scene = scene;
         this.x = x;
         this.y = y;
-        this.width = 400; // increased width
-        this.height = 20;
+        this.width = 500; // increased width
+        this.height = 30; // increased height
         this.maxHealth = 100;
         this.currentHealth = this.maxHealth;
         this.color = 0x00ff00;
@@ -26,10 +27,11 @@ export default class HealthBar {
         this.healthBar = this.scene.add.graphics();
         this.nameText = scene.add.text(x, y - 35, name, { fontSize: '30px', color: '#ffffff' }); // font size changed to 30px, color changed to white
         this.expText = scene.add.text(x + this.width - 50, y - 35, expLevel, { fontSize: '30px', color: '#ffffff' }); // exp level text, right-aligned
-        this.draw();
+        this.healthText = scene.add.text(x + this.width / 2, y + this.height / 2, `${this.currentHealth}/${this.maxHealth}`, { fontSize: '16px', color: '#ffffff' }).setOrigin(0.5);
+        this.create();
     }
 
-    private draw() {
+    private create() {
         this.healthBar.clear();
         // Draw border
         this.healthBar.fillStyle(0x000000, 0.8); // increased opacity
@@ -41,15 +43,18 @@ export default class HealthBar {
         const fillWidth = (this.currentHealth / this.maxHealth) * this.width;
         this.healthBar.fillStyle(this.color, 0.8); // increased opacity
         this.healthBar.fillRoundedRect(this.x, this.y, fillWidth, this.height, 3);
+        // Update health text
+        this.healthText.setText(`${this.currentHealth}/${this.maxHealth}`);
+        this.healthText.setPosition(this.x + this.width / 2, this.y + this.height / 2);
         // Above health bar text
         this.nameText.x = this.x; // align with left of health bar
-        this.nameText.y = this.y - 30; // adjust y position for larger font size
+        this.nameText.y = this.y - 40; // adjust y position for larger font size
         this.expText.x = this.x + this.width - this.expText.width; // right-align exp level text
-        this.expText.y = this.y - 30; // adjust y position for larger font size
+        this.expText.y = this.y - 40; // adjust y position for larger font size
     }
 
-    public updateHealth(newHealth: number) {
-        this.currentHealth = Phaser.Math.Clamp(newHealth, 0, this.maxHealth);
-        this.draw();
+    public update(currentHealth: number) {
+        this.currentHealth = Math.max(0, currentHealth); // Ensure health doesn't go below 0
+        this.create();
     }
 }

@@ -41,6 +41,15 @@ export function applyTweenEffect(scene: Scene, target: Phaser.GameObjects.Image,
                 onComplete: () => console.log('Glow effect completed on target')
             });
             break;
+        case 'Dissolve with Glitter':
+            scene.tweens.add({
+                targets: target,
+                alpha: 0,
+                duration: 500,
+                ease: 'Power2',
+                onComplete: () => console.log('Dissolve with Glitter effect completed on target')
+            });
+            break;
         default:
             // Default effect: Blink red
             scene.tweens.add({
