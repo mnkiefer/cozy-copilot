@@ -32,14 +32,14 @@ export default class HealthBar {
     private draw() {
         this.healthBar.clear();
         // Draw border
-        this.healthBar.fillStyle(0x000000, 0.5); // semi-transparent border
+        this.healthBar.fillStyle(0x000000, 0.8); // increased opacity
         this.healthBar.fillRoundedRect(this.x - 2, this.y - 2, this.width + 4, this.height + 4, 3);
         // Draw background
-        this.healthBar.fillStyle(0x555555, 0.5); // semi-transparent background
+        this.healthBar.fillStyle(0x555555, 0.8); // increased opacity
         this.healthBar.fillRoundedRect(this.x, this.y, this.width, this.height, 3);
         // Draw health fill proportional to current health
         const fillWidth = (this.currentHealth / this.maxHealth) * this.width;
-        this.healthBar.fillStyle(this.color, 0.5); // semi-transparent health fill
+        this.healthBar.fillStyle(this.color, 0.8); // increased opacity
         this.healthBar.fillRoundedRect(this.x, this.y, fillWidth, this.height, 3);
         // Above health bar text
         this.nameText.x = this.x; // align with left of health bar

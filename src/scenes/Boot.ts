@@ -22,7 +22,8 @@ export class Boot extends Scene {
         this.load.atlas('copilot', 'spritesheets/copilot.png', 'spritesheets/copilot.json');
 
         // Load image files
-        this.load.image('cartoon-player', 'avatars/cartoon-player.png');
+        this.load.image('player-avatar', 'avatars/player.png');
+        this.load.image('copilot-avatar', 'avatars/copilot.png');
         this.load.image('syntax-spider', 'avatars/syntax-spider.png');
 
         // Load audio files

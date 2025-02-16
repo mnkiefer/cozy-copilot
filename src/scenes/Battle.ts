@@ -1,11 +1,11 @@
 import { Scene } from 'phaser';
-import BattleTextBox from '../objects/BattleTextBox';
+import BattleInterface from '../objects/BattleInterface';
 import HealthBar from '../objects/HealthBar';
 
 import type { World } from './World';
 
 export class Battle extends Scene {
-    private textBox!: BattleTextBox;
+    private interface!: BattleInterface;
     private battleMusic!: Phaser.Sound.BaseSound;
     private onBattleEnd!: () => void;
     public enemyHealthBar!: HealthBar;
@@ -15,29 +15,51 @@ export class Battle extends Scene {
         super('Battle');
     }
 
-    create(data: { battleMusic: Phaser.Sound.BaseSound, onBattleEnd: () => void }) {
+    create(data: { enemy: string, battleMusic: Phaser.Sound.BaseSound, onBattleEnd: () => void }) {
+        this.interface = this.createBattleInterface();
+        this.startBattle(data);
+    }
+
+    private startBattle(data: { enemy: string, battleMusic: Phaser.Sound.BaseSound, onBattleEnd: () => void } = {
+        enemy: 'default enemy',
+        battleMusic: this.sound.add('battle-music'),
+        onBattleEnd: () => {}
+    }) {
+        this.initializeBattleMusic(data);
+        this.fadeInCamera();
+        this.createHealthBars('PLAYER', data.enemy);
+
+        const spriteSize = this.calculateSpriteSize();
+        this.spawnEnemySprite(spriteSize);
+        this.spawnPlayerSprite(spriteSize);
+
+        this.interface.create('A wild Bug appeared...\n\n\nWhat will you do?');
+    }
+
+    private initializeBattleMusic(data: { battleMusic: Phaser.Sound.BaseSound, onBattleEnd: () => void }): void {
         this.battleMusic = data.battleMusic;
         this.onBattleEnd = data.onBattleEnd;
-
         this.battleMusic.play();
         this.tweens.add({
             targets: this.battleMusic,
             volume: 0.5,
             duration: 1000
         });
-
-        this.cameras.main.fadeIn(500);
-        this.textBox = new BattleTextBox(this, () => this.exitBattle());
-        this.startBattle();
-        this.createHealthBars('PLAYER', 'SYNTAX SPIDER');
     }
 
-    private startBattle() {
-        this.add.rectangle(0, 0, this.cameras.main.width, this.cameras.main.height, 0x000000)
-            .setOrigin(0, 0)
-            .setAlpha(0.8);
-        const spriteSize = Math.min(this.cameras.main.width, this.cameras.main.height) * 0.5;
+    private fadeInCamera(): void {
+        this.cameras.main.fadeIn(500);
+    }
 
+    private createBattleInterface(): BattleInterface {
+        return new BattleInterface(this, () => this.exitBattle());
+    }
+
+    private calculateSpriteSize(): number {
+        return Math.min(this.cameras.main.width, this.cameras.main.height) * 0.5;
+    }
+
+    private spawnEnemySprite(spriteSize: number): void {
         const enemyFinalX = this.cameras.main.width * 0.75;
         const enemyFinalY = this.cameras.main.height * 0.3;
         const enemySprite = this.add.image(enemyFinalX, enemyFinalY, 'syntax-spider').setName('enemySprite');
@@ -49,10 +71,12 @@ export class Battle extends Scene {
             duration: 1000,
             ease: 'Power2'
         });
+    }
 
+    private spawnPlayerSprite(spriteSize: number): void {
         const playerFinalX = this.cameras.main.width * 0.25;
         const playerFinalY = this.cameras.main.height * 0.48;
-        const playerSprite = this.add.image(playerFinalX, playerFinalY, 'cartoon-player').setName('playerSprite');
+        const playerSprite = this.add.image(playerFinalX, playerFinalY, 'player-avatar').setName('playerSprite');
         playerSprite.setScale(spriteSize / Math.max(playerSprite.width, playerSprite.height));
         playerSprite.x = this.cameras.main.width + playerSprite.width;
         this.tweens.add({
@@ -61,8 +85,6 @@ export class Battle extends Scene {
             duration: 1000,
             ease: 'Power2'
         });
-
-        this.textBox.create('A wild Bug appeared...\n\n\nWhat will you do?');
     }
 
     private createHealthBars(playerName: string, enemyName: string) {

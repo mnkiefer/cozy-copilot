@@ -59,7 +59,8 @@ export class World extends Scene {
             const tile = this.battleZones.getTileAtWorldXY(this.player.x, this.player.y);
             if (tile && tile !== this.lastBattleTile) {
                 this.lastBattleTile = tile;
-                this.startBattle();
+                const enemy = (tile.properties as { enemy: string }).enemy;
+                this.startBattle(enemy);
             } else if (!tile) {
                 this.lastBattleTile = null;
             }
@@ -148,7 +149,7 @@ export class World extends Scene {
         this.sound.play('world');
     }
 
-    private startBattle() {
+    private startBattle(enemy: string) {
         if (!this.canEnterBattle) return;
 
         this.canEnterBattle = false;
@@ -176,6 +177,7 @@ export class World extends Scene {
 
         this.time.delayedCall(800, () => {
             this.scene.launch('Battle', {
+                enemy,
                 battleMusic,
                 onBattleEnd: () => {
                     this.player.isInBattle = false;

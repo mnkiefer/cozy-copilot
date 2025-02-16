@@ -1,6 +1,9 @@
 import type { Scene } from 'phaser';
+import ALLIES from '../config/ALLIES';
+import ITEMS from '../config/ITEMS';
+import { applyTweenEffect } from '../utils/effects';
 
-const actions = ['DEBUG', 'COMPANIONS', 'ITEMS', 'RUN'];
+const actions = ['DEBUG', 'EXCHANGE', 'ITEMS', 'RUN'];
 
 interface BattleTextBoxConfig {
     width?: number;
@@ -11,7 +14,7 @@ interface BattleTextBoxConfig {
     textSpeed?: number;
 }
 
-export default class BattleTextBox {
+export default class BattleInterface {
     public static readonly DEFAULT_CONFIG: BattleTextBoxConfig = {
         width: 0.8,
         height: 0.2,
@@ -30,6 +33,8 @@ export default class BattleTextBox {
     private arrow!: Phaser.GameObjects.Text;
     private exitCallback: () => void;
     private isSubMenuActive: boolean = false;
+    private companionSprites: Phaser.GameObjects.Image[] = [];
+    private currentCompanionIndex: number = 0;
 
     constructor(scene: Scene, exitCallback: () => void) {
         this.scene = scene;
@@ -125,7 +130,6 @@ export default class BattleTextBox {
         }
 
     private createSubMenu(actions: string[], color: string) {
-        // Add "BACK" option to the submenu
         actions.push('BACK');
 
         const camera = this.scene.cameras.main;
@@ -183,7 +187,6 @@ export default class BattleTextBox {
             this.selectedIndex = 0;
             this.updateArrowPosition();
 
-            // Hide submenu background and frame
             this.scene.children.getByName('subMenuBackground')?.destroy();
             this.scene.children.getByName('subMenuFrame')?.destroy();
         }
@@ -199,6 +202,13 @@ export default class BattleTextBox {
         this.updateArrowPosition();
     }
 
+    private getAttacksForParticipant(participant: string) {
+        if (participant in ALLIES) {
+            return ALLIES[participant as keyof typeof ALLIES].attacks;
+        }
+        return {};
+    }
+
     private selectAction() {
         if (this.isSubMenuActive) {
             const selectedSubAction = this.subMenuTexts[this.selectedIndex].text;
@@ -206,6 +216,7 @@ export default class BattleTextBox {
                 this.closeSubMenu();
             } else {
                 this.applyActionEffect(selectedSubAction);
+                console.log('selectedSubAction', selectedSubAction);
                 this.closeSubMenu();
             }
         } else {
@@ -223,15 +234,22 @@ export default class BattleTextBox {
                 let subActions: string[] = [];
                 const actionColor = 'white';
                 switch (selectedAction) {
-                    case 'DEBUG':
-                        subActions = ['Console Log', 'Use Debugger', 'Run Profiler'];
+                    case 'DEBUG': {
+                        const activeParticipant = this.getActiveParticipant();
+                        const attacks = this.getAttacksForParticipant(activeParticipant);
+                        subActions = Object.keys(attacks);
                         break;
-                    case 'COMPANIONS':
-                        subActions = ['Copilot'];
+                    }
+                    case 'EXCHANGE': {
+                        const activeParticipant = this.getActiveParticipant();
+                        subActions = Object.keys(ALLIES).filter(action => action !== activeParticipant);
                         break;
-                    case 'ITEMS':
-                        subActions = ['☕️ Coffee'];
+                    }
+                    case 'ITEMS': {
+                        const items = ITEMS || [];
+                        subActions = Object.keys(items);
                         break;
+                    }
                     default:
                         subActions = [];
                         break;
@@ -241,91 +259,82 @@ export default class BattleTextBox {
         }
     }
 
-    private applyActionEffect(subAction: string) {
-        const damage = 10;
-
-        this.updateText(`Used ${subAction}!\nEnemy took ${damage} damage!`);
-
-        const enemySprite = this.scene.children.getByName('enemySprite') as Phaser.GameObjects.Image;
-        if (enemySprite) {
-            console.log(`Applying effect to enemySprite for action: ${subAction}`);
-            switch (subAction) {
-                case 'Console Log':
-                    this.scene.tweens.add({
-                        targets: enemySprite,
-                        angle: 360,
-                        duration: 1000,
-                        ease: 'Power2',
-                        onComplete: () => console.log('Console Log effect completed on enemySprite')
-                    });
-                    break;
-                case 'Use Debugger':
-                    this.scene.tweens.add({
-                        targets: enemySprite,
-                        alpha: 0,
-                        duration: 500,
-                        yoyo: true,
-                        repeat: 1,
-                        onComplete: () => console.log('Use Debugger effect completed on enemySprite')
-                    });
-                    break;
-                case 'Run Profiler':
-                    this.scene.tweens.add({
-                        targets: enemySprite,
-                        scaleX: 1.5,
-                        scaleY: 1.5,
-                        duration: 500,
-                        yoyo: true,
-                        onComplete: () => console.log('Run Profiler effect completed on enemySprite')
-                    });
-                    break;
-                default:
-                    break;
-            }
-        } else {
-            console.error('enemySprite not found');
-        }
-
-        // Add visual effects on the player sprite
+    private getActiveParticipant(): string {
         const playerSprite = this.scene.children.getByName('playerSprite') as Phaser.GameObjects.Image;
         if (playerSprite) {
-            console.log(`Applying effect to playerSprite for action: ${subAction}`);
-            switch (subAction) {
-                case 'Console Log':
-                    this.scene.tweens.add({
-                        targets: playerSprite,
-                        angle: -360,
-                        duration: 1000,
-                        ease: 'Power2',
-                        onComplete: () => console.log('Console Log effect completed on playerSprite')
-                    });
-                    break;
-                case 'Use Debugger':
-                    this.scene.tweens.add({
-                        targets: playerSprite,
-                        alpha: 0,
-                        duration: 500,
-                        yoyo: true,
-                        repeat: 1,
-                        onComplete: () => console.log('Use Debugger effect completed on playerSprite')
-                    });
-                    break;
-                case 'Run Profiler':
-                    this.scene.tweens.add({
-                        targets: playerSprite,
-                        scaleX: 1.5,
-                        scaleY: 1.5,
-                        duration: 500,
-                        yoyo: true,
-                        onComplete: () => console.log('Run Profiler effect completed on playerSprite')
-                    });
-                    break;
-                default:
-                    break;
-            }
-        } else {
-            console.error('playerSprite not found');
+            return playerSprite.texture.key.toUpperCase().replace('-AVATAR', '');
         }
+        return '';
+    }
+
+    private applyActionEffect(selection: string) {
+        if (selection in ALLIES) {
+            this.changeActiveParticipant(selection);
+            this.updateText(`Switched to ${selection}!`);
+        } else if (selection in ITEMS) {
+            const activeParticipant = this.getActiveParticipant();
+            const item = ITEMS[selection as keyof typeof ITEMS];
+            if (item.on.includes(activeParticipant)) {
+                if (item.message) {
+                    this.updateText(`${activeParticipant} +  ${item.message}`)
+                } else {
+                    this.updateText(`Used ${selection}!`);
+                }
+
+                const participantSprite = this.scene.children.getByName(`${activeParticipant.toLowerCase()}Sprite`) as Phaser.GameObjects.Image;
+                if (participantSprite) {
+                    applyTweenEffect(this.scene, participantSprite, 'Glow');
+                } else {
+                    console.error(`${activeParticipant} sprite not found`);
+                }
+            } else {
+                this.updateText(`This item has effect on ${activeParticipant}.`);
+            }
+        }
+
+        if (selection in ALLIES[this.getActiveParticipant() as keyof typeof ALLIES].attacks) {
+            // Get points from the attack
+            const activeParticipant = this.getActiveParticipant();
+            const attacks = ALLIES[activeParticipant as keyof typeof ALLIES].attacks;
+            const attack = attacks[selection as keyof typeof attacks] as { points: number, effect: string };
+            const points = attack.points;
+            this.updateText(`Used ${selection}!\nEnemy took ${points} damage!`);
+            applyTweenEffect(this.scene, this.scene.children.getByName('enemySprite') as Phaser.GameObjects.Image, attack.effect);
+        }
+    }
+
+    private changeActiveParticipant(newParticipant: string) {
+        const playerSprite = this.scene.children.getByName('playerSprite') as Phaser.GameObjects.Image;
+        if (playerSprite) {
+            playerSprite.setTexture(`${newParticipant.toLowerCase()}-avatar`);
+        }
+    }
+
+    private changeCompanionSprite() {
+        const currentSprite = this.companionSprites[this.currentCompanionIndex];
+        const nextIndex = (this.currentCompanionIndex + 1) % this.companionSprites.length;
+        const nextSprite = this.companionSprites[nextIndex];
+
+        this.scene.tweens.add({
+            targets: currentSprite,
+            x: currentSprite.x - 200,
+            alpha: 0,
+            duration: 500,
+            ease: 'Power2',
+            onComplete: () => {
+                currentSprite.setVisible(false);
+                this.currentCompanionIndex = nextIndex;
+                nextSprite.setPosition(currentSprite.x - 200, currentSprite.y);
+                nextSprite.setVisible(true);
+                this.scene.tweens.add({
+                    targets: nextSprite,
+                    x: currentSprite.x,
+                    alpha: 1,
+                    duration: 500,
+                    ease: 'Power2'
+                });
+            }
+        });
     }
 
     private updateArrowPosition() {
@@ -346,8 +355,6 @@ export default class BattleTextBox {
                 text.setStyle({ fontSize: '35px', fontStyle: 'normal' });
             }
         });
-
-        console.log(this.arrow.x, this.arrow.y);
     }
 
     closeTextBox() {
