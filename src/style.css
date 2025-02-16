@@ -18,6 +18,7 @@ body {
     align-items: center;
     padding: 20px;
     box-sizing: border-box;
+    position: relative;
 }
 
 #app canvas {
@@ -25,37 +26,56 @@ body {
     display: block;
 }
 
-/* Touch controls */
 .touch-controls {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    position: fixed;
+    display: none;
+    z-index: 1000;
+}
+
+.touch-controls.left {
+    left: 20px;
+    bottom: 100px;
     display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.touch-controls.right {
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
     gap: 10px;
 }
 
 .touch-button {
-    width: 50px;
-    height: 50px;
-    background-color: rgba(255, 255, 255, 0.5);
-    border: none;
+    width: 60px;
+    height: 60px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.4);
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 24px;
-    color: #000;
+    font-size: 30px;
+    color: rgba(255, 255, 255, 0.8);
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
 }
 
 .touch-button:active {
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 255, 255, 0.4);
     transform: scale(0.9);
 }
 
 @media (max-width: 600px) {
+    .touch-controls {
+        display: flex;
+    }
+
     .touch-button {
         width: 40px;
         height: 40px;
@@ -63,7 +83,44 @@ body {
     }
 }
 
+@media (max-width: 768px) {
+    .touch-controls {
+        display: flex;
+    }
+
+    .touch-controls.left {
+        display: grid;
+        grid-template-columns: repeat(3, 60px);
+        grid-template-rows: repeat(3, 60px);
+        gap: 5px;
+    }
+
+    .touch-controls.left #up {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .touch-controls.left #left {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .touch-controls.left #down {
+        grid-column: 2;
+        grid-row: 3;
+    }
+
+    .touch-controls.left #right {
+        grid-column: 3;
+        grid-row: 2;
+    }
+}
+
 @media (min-width: 1200px) {
+    .touch-controls {
+        display: none;
+    }
+
     .touch-button {
         width: 60px;
         height: 60px;

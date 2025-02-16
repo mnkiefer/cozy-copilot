@@ -1,6 +1,32 @@
-import type { Scene } from 'phaser';
+import HealthBar from './HealthBar';
 
-export default class TextBoxBattle {
+import type { Scene } from 'phaser';
+import { applyTweenEffect } from '../utils/effects';
+
+import ALLIES from '../config/ALLIES';
+import ENEMIES from '../config/ENEMIES';
+import ITEMS from '../config/ITEMS';
+
+const actions = ['DEBUG', 'EXCHANGE', 'ITEMS', 'RUN'];
+
+interface BattleTextBoxConfig {
+    width?: number;
+    height?: number;
+    fontSize?: number;
+    padding?: number;
+    borderRadius?: number;
+    textSpeed?: number;
+}
+
+export default class BattleInterface {
+    public static readonly DEFAULT_CONFIG: BattleTextBoxConfig = {
+        width: 0.8,
+        height: 0.2,
+        fontSize: 32,
+        padding: 20,
+        borderRadius: 20,
+        textSpeed: 40
+    };
     private scene: Scene;
     private textBox!: Phaser.GameObjects.Text;
     private textBoxBackground!: Phaser.GameObjects.Graphics;
@@ -11,13 +37,18 @@ export default class TextBoxBattle {
     private arrow!: Phaser.GameObjects.Text;
     private exitCallback: () => void;
     private isSubMenuActive: boolean = false;
+    private companionSprites: Phaser.GameObjects.Image[] = [];
+    private currentCompanionIndex: number = 0;
+    public enemyHealthBar!: HealthBar;
+    public playerHealthBar!: HealthBar;
 
     constructor(scene: Scene, exitCallback: () => void) {
         this.scene = scene;
         this.exitCallback = exitCallback;
     }
 
-    create(message: string) {
+    create(message: string, playerName: string, enemyName: string) {
+        this.createHealthBars(playerName, enemyName);
         const camera = this.scene.cameras.main;
 
         const textBoxWidth = camera.width * 0.5;
@@ -41,7 +72,7 @@ export default class TextBoxBattle {
         this.textBox = this.scene.add.text(textBoxX + 30, textBoxY + 30, '', {
             fontSize: '32px',
             color: '#ffffff',
-            wordWrap: { width: textBoxWidth },
+            wordWrap: { width: textBoxWidth - 60 },
             padding: { left: 20, right: 20, top: 20, bottom: 20 }
         });
         this.textBox.setDepth(textBoxDepth);
@@ -62,8 +93,6 @@ export default class TextBoxBattle {
         actionFrame.strokeRoundedRect(actionBoxX + 10, textBoxY + 10, actionBoxWidth - 20, actionBoxHeight - 20, 15);
         actionFrame.setDepth(textBoxDepth);
 
-        const actions = ['DEBUG', 'FRIENDS', 'DEVTOOLS', 'ITEMS', 'RUN'];
-        const actionColors = ['#ff0000', '#00ff00', 'cyan', 'pink', '#ffffff'];
         this.actionTexts = [];
         actions.forEach((action, index) => {
             const actionText = this.scene.add.text(
@@ -72,7 +101,7 @@ export default class TextBoxBattle {
                 action,
                 {
                     fontSize: '35px',
-                    color: actionColors[index],
+                    color: 'white',
                     padding: { left: 10, right: 10, top: 10, bottom: 10 }
                 }
             ).setOrigin(0.5)
@@ -88,7 +117,6 @@ export default class TextBoxBattle {
           .setDepth(textBoxDepth);
         this.updateArrowPosition();
 
-        // Add arrow animation with pulsing effect
         this.scene.tweens.add({
             targets: this.arrow,
             scaleX: 1.2,
@@ -108,8 +136,12 @@ export default class TextBoxBattle {
         this.updateText(message);
     }
 
+    private createHealthBars(playerName: string, enemyName: string) {
+        this.enemyHealthBar = new HealthBar(this.scene, this.scene.cameras.main.originX, 50, enemyName, 'Lv. 5');
+        this.playerHealthBar = new HealthBar(this.scene, this.scene.cameras.main.width - 500, this.scene.cameras.main.height - 400, playerName, 'Lv. 10');
+    }
+
     private createSubMenu(actions: string[], color: string) {
-        // Add "BACK" option to the submenu
         actions.push('BACK');
 
         const camera = this.scene.cameras.main;
@@ -167,7 +199,6 @@ export default class TextBoxBattle {
             this.selectedIndex = 0;
             this.updateArrowPosition();
 
-            // Hide submenu background and frame
             this.scene.children.getByName('subMenuBackground')?.destroy();
             this.scene.children.getByName('subMenuFrame')?.destroy();
         }
@@ -183,13 +214,20 @@ export default class TextBoxBattle {
         this.updateArrowPosition();
     }
 
+    private getAttacksForParticipant(participant: string) {
+        if (participant in ALLIES) {
+            return ALLIES[participant as keyof typeof ALLIES].attacks;
+        }
+        return {};
+    }
+
     private selectAction() {
         if (this.isSubMenuActive) {
             const selectedSubAction = this.subMenuTexts[this.selectedIndex].text;
             if (selectedSubAction === 'BACK') {
                 this.closeSubMenu();
             } else {
-                this.updateText(`Used ${selectedSubAction}!\nIt's super effective!`);
+                this.applyActionEffect(selectedSubAction);
                 this.closeSubMenu();
             }
         } else {
@@ -204,11 +242,168 @@ export default class TextBoxBattle {
                     }
                 });
             } else {
-                const subActions = ['Option 1', 'Option 2', 'Option 3'];
-                const actionColor = this.actionTexts[this.selectedIndex].style.color;
+                let subActions: string[] = [];
+                const actionColor = 'white';
+                switch (selectedAction) {
+                    case 'DEBUG': {
+                        const activeParticipant = this.getActiveParticipant();
+                        const attacks = this.getAttacksForParticipant(activeParticipant);
+                        subActions = Object.keys(attacks);
+                        break;
+                    }
+                    case 'EXCHANGE': {
+                        const activeParticipant = this.getActiveParticipant();
+                        subActions = Object.keys(ALLIES).filter(action => action !== activeParticipant);
+                        break;
+                    }
+                    case 'ITEMS': {
+                        const items = ITEMS || [];
+                        subActions = Object.keys(items);
+                        break;
+                    }
+                    default:
+                        subActions = [];
+                        break;
+                }
                 this.createSubMenu(subActions, actionColor as string);
             }
         }
+    }
+
+    private getActiveParticipant(): string {
+        const playerSprite = this.scene.children.getByName('playerSprite') as Phaser.GameObjects.Image;
+        if (playerSprite) {
+            return playerSprite.texture.key.toUpperCase().replace('-AVATAR', '');
+        }
+        return '';
+    }
+
+    private applyActionEffect(selection: string) {
+        if (selection in ALLIES) {
+            this.changeActiveParticipant(selection);
+            this.updateText(`Switched to ${selection}!`);
+        } else if (selection in ITEMS) {
+            const activeParticipant = this.getActiveParticipant();
+            const item = ITEMS[selection as keyof typeof ITEMS];
+            if (item.on.includes(activeParticipant)) {
+                if (item.message) {
+                    this.updateText(`${activeParticipant} +  ${item.message}`)
+                } else {
+                    this.updateText(`Used ${selection}!`);
+                }
+
+                const participantSprite = this.scene.children.getByName(`${activeParticipant.toLowerCase()}Sprite`) as Phaser.GameObjects.Image;
+                if (participantSprite) {
+                    applyTweenEffect(this.scene, participantSprite, 'Glow');
+                } else {
+                    console.error(`${activeParticipant} sprite not found`);
+                }
+            } else {
+                this.updateText(`This item has effect on ${activeParticipant}.`);
+            }
+        }
+
+        if (selection in ALLIES[this.getActiveParticipant() as keyof typeof ALLIES].attacks) {
+            // Get points from the attack
+            const activeParticipant = this.getActiveParticipant();
+            const attacks = ALLIES[activeParticipant as keyof typeof ALLIES].attacks;
+            const attack = attacks[selection as keyof typeof attacks] as { points: number, effect: string };
+            const points = attack.points;
+            this.updateText(`Used ${selection}!\nEnemy took ${points} damage!`);
+            applyTweenEffect(this.scene, this.scene.children.getByName('enemySprite') as Phaser.GameObjects.Image, attack.effect);
+            this.enemyHealthBar.update(this.enemyHealthBar.currentHealth - points); // Reduce enemy health
+
+            if (this.enemyHealthBar.currentHealth <= 0) {
+                applyTweenEffect(this.scene, this.scene.children.getByName('enemySprite') as Phaser.GameObjects.Image, 'Dissolve with Glitter');
+                this.scene.time.addEvent({
+                    delay: 1000,
+                    callback: () => {
+                        this.updateText('Player has won!');
+                        this.scene.time.addEvent({
+                            delay: 1000,
+                            callback: () => {
+                                this.closeTextBox();
+                                this.exitCallback();
+                            }
+                        });
+                    }
+                });
+            } else {
+                this.scene.time.addEvent({
+                    delay: 1000,
+                    callback: () => {
+                        this.enemyAction();
+                    }
+                });
+            }
+        }
+    }
+
+    private enemyAction() {
+        const enemyAttacks = Object.keys(ENEMIES['SYNTAX SPIDER'].attacks);
+        const randomAttack = enemyAttacks[Math.floor(Math.random() * enemyAttacks.length)];
+        const attack = ENEMIES['SYNTAX SPIDER'].attacks[randomAttack as keyof typeof ENEMIES['SYNTAX SPIDER']['attacks']];
+        const points = attack.points;
+        this.updateText(`Enemy used ${randomAttack}!\nPlayer took ${points} damage!`);
+        applyTweenEffect(this.scene, this.scene.children.getByName('playerSprite') as Phaser.GameObjects.Image, attack.effect);
+        this.playerHealthBar.update(this.playerHealthBar.currentHealth - points); // Reduce player health
+
+        if (this.playerHealthBar.currentHealth <= 0) {
+            this.scene.time.addEvent({
+                delay: 1000,
+                callback: () => {
+                    this.updateText('Enemy has won!');
+                    this.scene.time.addEvent({
+                        delay: 1000,
+                        callback: () => {
+                            this.closeTextBox();
+                            this.exitCallback();
+                        }
+                    });
+                }
+            });
+        } else {
+            this.scene.time.addEvent({
+                delay: 1000,
+                callback: () => {
+                    this.updateText('What will you do?');
+                }
+            });
+        }
+    }
+
+    private changeActiveParticipant(newParticipant: string) {
+        const playerSprite = this.scene.children.getByName('playerSprite') as Phaser.GameObjects.Image;
+        if (playerSprite) {
+            playerSprite.setTexture(`${newParticipant.toLowerCase()}-avatar`);
+        }
+    }
+
+    private changeCompanionSprite() {
+        const currentSprite = this.companionSprites[this.currentCompanionIndex];
+        const nextIndex = (this.currentCompanionIndex + 1) % this.companionSprites.length;
+        const nextSprite = this.companionSprites[nextIndex];
+
+        this.scene.tweens.add({
+            targets: currentSprite,
+            x: currentSprite.x - 200,
+            alpha: 0,
+            duration: 500,
+            ease: 'Power2',
+            onComplete: () => {
+                currentSprite.setVisible(false);
+                this.currentCompanionIndex = nextIndex;
+                nextSprite.setPosition(currentSprite.x - 200, currentSprite.y);
+                nextSprite.setVisible(true);
+                this.scene.tweens.add({
+                    targets: nextSprite,
+                    x: currentSprite.x,
+                    alpha: 1,
+                    duration: 500,
+                    ease: 'Power2'
+                });
+            }
+        });
     }
 
     private updateArrowPosition() {
@@ -218,21 +413,17 @@ export default class TextBoxBattle {
         this.arrow.setX(selectedText.x - selectedText.width / 2 - this.arrow.width - offset);
         this.arrow.setY(selectedText.y);
 
-        // Change arrow color based on selected action
-        const actionColors = this.isSubMenuActive ? ['#ff0000', '#00ff00', 'cyan'] : ['#ff0000', '#00ff00', 'cyan', 'pink', '#ffffff'];
-        this.arrow.setColor(actionColors[this.selectedIndex]);
+        this.arrow.setColor('white');
 
-        // Add glow effect to the selected text
+        // Remove glow effect from the selected text
         const texts = this.isSubMenuActive ? this.subMenuTexts : this.actionTexts;
         texts.forEach((text, index) => {
             if (index === this.selectedIndex) {
-                text.setStyle({ fontSize: '40px', fontStyle: 'bold', shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 5, stroke: true, fill: true } });
+                text.setStyle({ fontSize: '40px', fontStyle: 'bold' });
             } else {
-                text.setStyle({ fontSize: '35px', fontStyle: 'normal', shadow: { offsetX: 0, offsetY: 0, color: '#000', blur: 0, stroke: false, fill: false } });
+                text.setStyle({ fontSize: '35px', fontStyle: 'normal' });
             }
         });
-
-        console.log(this.arrow.x, this.arrow.y);
     }
 
     closeTextBox() {
