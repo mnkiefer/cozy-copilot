@@ -126,6 +126,12 @@
          "id":9,
          "name":"Battle",
          "opacity":1,
+         "properties":[
+                {
+                 "name":"enemy",
+                 "type":"string",
+                 "value":"SYNTAX SPIDER"
+                }],
          "type":"tilelayer",
          "visible":true,
          "width":30,
