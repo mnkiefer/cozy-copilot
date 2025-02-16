@@ -34,4 +34,102 @@ const config: Types.Core.GameConfig = {
     zoom: VIEWPORT_CONSTANTS.ZOOM
 };
 
-export default new Game(config);
+function createTouchControls() {
+    const leftControls = document.createElement('div');
+    leftControls.className = 'touch-controls left';
+
+    // Create the d-pad buttons
+    const upButton = document.createElement('button');
+    upButton.className = 'touch-button';
+    upButton.id = 'up';
+    upButton.innerHTML = '⬆';
+
+    const leftButton = document.createElement('button');
+    leftButton.className = 'touch-button';
+    leftButton.id = 'left';
+    leftButton.innerHTML = '⬅';
+
+    const downButton = document.createElement('button');
+    downButton.className = 'touch-button';
+    downButton.id = 'down';
+    downButton.innerHTML = '⬇';
+
+    const rightButton = document.createElement('button');
+    rightButton.className = 'touch-button';
+    rightButton.id = 'right';
+    rightButton.innerHTML = '➡';
+
+    // Add buttons to the d-pad container
+    leftControls.appendChild(upButton);
+    leftControls.appendChild(leftButton);
+    leftControls.appendChild(downButton);
+    leftControls.appendChild(rightButton);
+
+    // Add container to app
+    document.getElementById('app')?.appendChild(leftControls);
+
+    return { leftControls };
+}
+
+function setupTouchControls(scene: Phaser.Scene) {
+    const touchControls = createTouchControls();
+
+    const keys = {
+        up: scene.input.keyboard?.addKey('W'),
+        left: scene.input.keyboard?.addKey('A'),
+        down: scene.input.keyboard?.addKey('S'),
+        right: scene.input.keyboard?.addKey('D')
+    };
+
+    touchControls.leftControls.addEventListener('touchstart', (event) => {
+        const target = event.target as HTMLElement;
+        if (target.classList.contains('touch-button')) {
+            event.preventDefault();
+            const direction = target.id;
+            switch (direction) {
+                case 'up':
+                    if (keys.up) keys.up.isDown = true;
+                    break;
+                case 'left':
+                    if (keys.left) keys.left.isDown = true;
+                    break;
+                case 'down':
+                    if (keys.down) keys.down.isDown = true;
+                    break;
+                case 'right':
+                    if (keys.right) keys.right.isDown = true;
+                    break;
+            }
+        }
+    });
+
+    touchControls.leftControls.addEventListener('touchend', (event) => {
+        const target = event.target as HTMLElement;
+        if (target.classList.contains('touch-button')) {
+            const direction = target.id;
+            switch (direction) {
+                case 'up':
+                    if (keys.up) keys.up.isDown = false;
+                    break;
+                case 'left':
+                    if (keys.left) keys.left.isDown = false;
+                    break;
+                case 'down':
+                    if (keys.down) keys.down.isDown = false;
+                    break;
+                case 'right':
+                    if (keys.right) keys.right.isDown = false;
+                    break;
+            }
+        }
+    });
+}
+
+const game = new Game(config);
+game.events.on('ready', () => {
+    if (GAME_SETTINGS.IS_MOBILE) {
+        setupTouchControls(game.scene.scenes[0]);
+    }
+});
+
+export default game;

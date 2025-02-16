@@ -4,7 +4,7 @@ export const GAME_SETTINGS = {
     IS_PAUSED: false,
     IS_DEBUG: false,
     IS_FULLSCREEN: false,
-    IS_MOBILE: false,
+    IS_MOBILE: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
     IS_CONTEXT_MENU_DISABLED: false,
 } as const;
 
