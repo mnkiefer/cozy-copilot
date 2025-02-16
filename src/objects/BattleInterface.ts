@@ -315,7 +315,6 @@ export default class BattleInterface {
             this.enemyHealthBar.update(this.enemyHealthBar.currentHealth - points); // Reduce enemy health
 
             if (this.enemyHealthBar.currentHealth <= 0) {
-                this.updateText('Player has won!');
                 applyTweenEffect(this.scene, this.scene.children.getByName('enemySprite') as Phaser.GameObjects.Image, 'Dissolve with Glitter');
                 this.scene.time.addEvent({
                     delay: 1000,
@@ -351,7 +350,6 @@ export default class BattleInterface {
         this.playerHealthBar.update(this.playerHealthBar.currentHealth - points); // Reduce player health
 
         if (this.playerHealthBar.currentHealth <= 0) {
-            this.updateText('Enemy has won!');
             this.scene.time.addEvent({
                 delay: 1000,
                 callback: () => {
@@ -363,6 +361,13 @@ export default class BattleInterface {
                             this.exitCallback();
                         }
                     });
+                }
+            });
+        } else {
+            this.scene.time.addEvent({
+                delay: 1000,
+                callback: () => {
+                    this.updateText('What will you do?');
                 }
             });
         }
