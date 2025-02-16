@@ -22,6 +22,7 @@ export default class Enemy {
             this.health = 0;
             this.sprite.setVisible(false);
         }
+        this.healthBar.update(this.health);
     }
 
     getHealth() {

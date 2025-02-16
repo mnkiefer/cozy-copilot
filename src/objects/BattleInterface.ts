@@ -228,7 +228,6 @@ export default class BattleInterface {
                 this.closeSubMenu();
             } else {
                 this.applyActionEffect(selectedSubAction);
-                console.log('selectedSubAction', selectedSubAction);
                 this.closeSubMenu();
             }
         } else {
